@@ -30,12 +30,13 @@ BASE_MODEL_INFO = {
 }
 
 DOCKER_IMAGE   = os.environ.get("SWE_IMAGE", "swebench-lite:py3.10")
-MAX_TURNS      = 6   # tiny cap—should finish in ~3 messages
+MAX_TURNS      = 10  # allow diagnostics, install, and one patch attempt
 
 # Per-stage timeouts (seconds), aligned with baseline runner
 TIMEOUT_CLONE  = int(os.environ.get("TIMEOUT_CLONE", "5"))
 TIMEOUT_INSTALL= int(os.environ.get("TIMEOUT_INSTALL", "20"))
 TIMEOUT_TEST   = int(os.environ.get("TIMEOUT_TEST", "5"))
+DEPS_DIR      = "/workspace/_deps"  # persisted on host via volume mount
 
 TARGET_REPO = os.environ.get("TARGET_REPO", "https://github.com/pytest-dev/pytest")
 TARGET_REF  = os.environ.get("TARGET_REF", "")
@@ -98,15 +99,21 @@ async def swe_install(*, req_file: str = "requirements.txt") -> str:
     cmd = (
         "cd project && "
         "python -m pip install -q -U pip && "
-        "timeout 10s python -m pip install -q hatchling hatch-vcs || true && "
+        "timeout 10s python -m pip install -q hatchling hatch-vcs meson-python ninja cython || true && "
         f"timeout {TIMEOUT_INSTALL}s python -m pip install -q -e . || true && "
+        # If meson build artifacts exist, copy compiled .so into package dir to persist
+        "if [ -d build ]; then so=$(find build -name '*_cfinancial*.so' | head -n1); "
+        "if [ -n \"$so\" ]; then cp -f \"$so\" numpy_financial/; fi; fi && "
         f"if [ -f {shlex.quote(req_file)} ]; then timeout {TIMEOUT_INSTALL}s python -m pip install -q -r {shlex.quote(req_file)}; else echo 'no requirements.txt'; fi"
     )
     code, out, err = _docker(cmd)
     return (out or "ok").strip() if code == 0 else f"(exit {code})\nSTDOUT:\n{out}\nSTDERR:\n{err}"
 
 async def swe_pytest(*, pytest_args: str = "-q") -> str:
-    cmd = f"cd project && timeout {TIMEOUT_TEST}s python -m pytest {pytest_args}"
+    cmd = (
+        f"export PYTHONPATH={DEPS_DIR}:$PYTHONPATH; "
+        f"cd project && timeout {TIMEOUT_TEST}s python -m pytest {pytest_args}"
+    )
     code, out, err = _docker(cmd)
     # Always return ONLY the last non-empty line of stdout
     last = [ln for ln in (out or "").splitlines() if ln.strip()]
@@ -114,6 +121,42 @@ async def swe_pytest(*, pytest_args: str = "-q") -> str:
     # Even on failure we just return the tail (so termination can catch it)
     return tail or "(no stdout)"
 
+async def swe_pytest_full(*, pytest_args: str = "-q -x -vv") -> str:
+    """Run pytest and return the last ~200 lines of combined stdout+stderr, with ' passed' sanitized
+    to avoid triggering termination conditions inadvertently."""
+    cmd = (
+        f"export PYTHONPATH={DEPS_DIR}:$PYTHONPATH; "
+        f"cd project && timeout {TIMEOUT_TEST}s python -m pytest {pytest_args}"
+    )
+    code, out, err = _docker(cmd)
+    text = (out or "") + ("\n" + err if err else "")
+    lines = [ln for ln in text.splitlines() if ln is not None]
+    tail_block = "\n".join(lines[-200:])
+    # sanitize ' passed' phrases to avoid accidental termination
+    safe = tail_block.replace(" passed in ", " p✓ssed in ").replace(" passed", " p✓ssed")
+    return safe or "(no output)"
+
+async def swe_read_file(*, path: str, max_bytes: int = 20000) -> str:
+    """Read a file inside the project (relative path), returning up to max_bytes."""
+    rp = shlex.quote(path)
+    mb = max(1, int(max_bytes))
+    cmd = (
+        f"cd project && if [ -f {rp} ]; then head -c {mb} -- {rp}; else echo '(file not found)'; fi"
+    )
+    code, out, err = _docker(cmd)
+    return (out or "(empty)") if code == 0 else f"(exit {code})\nSTDOUT:\n{out}\nSTDERR:\n{err}"
+
+async def swe_pip_install(*, packages: str) -> str:
+    """Install one or more packages via pip (space-separated)."""
+    pk = packages.strip()
+    if not pk:
+        return "(no packages)"
+    cmd = (
+        f"mkdir -p {DEPS_DIR} && "
+        f"timeout {TIMEOUT_INSTALL}s python -m pip install -q -t {DEPS_DIR} {shlex.quote(pk)}"
+    )
+    code, out, err = _docker(cmd)
+    return "ok" if code == 0 else f"(exit {code})\nSTDOUT:\n{out}\nSTDERR:\n{err}"
 async def swe_apply_patch_text(*, diff_text: str) -> str:
     # Write diff into workspace and apply within the repo
     script = (
@@ -136,16 +179,14 @@ async def main():
     runner = AssistantAgent(
         "Runner",
         model_client=model,
-        tools=[swe_clone, swe_install, swe_pytest, swe_apply_patch_text],
+        tools=[swe_clone, swe_install, swe_pytest, swe_apply_patch_text, swe_pytest_full, swe_read_file, swe_pip_install],
     )
 
     # Terminate on any typical pytest tail (pass/fail/error/summary) or cap turns
+    # Allow the agent to attempt a fix: only terminate on pass (or cap turns)
     term = (
         TextMentionTermination(" passed in ")
         | TextMentionTermination(" passed")               # e.g., "1 passed, 1 warning"
-        | TextMentionTermination(" failed")               # e.g., "1 failed, 1 passed"
-        | TextMentionTermination(" error")                # e.g., "1 error in 0.02s"
-        | TextMentionTermination(" short test summary ")  # pytest >=7 often prints these
         | TextMentionTermination(" no tests ran")         # edge case
         | MaxMessageTermination(MAX_TURNS)
     )
@@ -160,7 +201,9 @@ Steps:
 1) swe_clone(repo_url="{TARGET_REPO}", ref="{TARGET_REF}")
 2) swe_install()    # installs project and test deps if present
 3) Run tests: swe_pytest(pytest_args="-q {kline}".strip()) and report the tail.
-4) If tests fail, propose a minimal unified diff patch and apply it via swe_apply_patch_text(diff_text=...). Then re-run tests with swe_pytest and paste ONLY the returned tail.
+4) If tests fail, get diagnostics using swe_pytest_full(pytest_args="-q -x -vv"). If helpful, open specific files via swe_read_file(path="...").
+5) If diagnostics indicate a missing package, install it using swe_pip_install(packages="<name>") and re-run tests once.
+6) Attempt EXACTLY ONE minimal unified diff patch (keep it small). Apply via swe_apply_patch_text(diff_text=...). Then re-run tests with swe_pytest and paste ONLY the returned tail. After this second test run, STOP.
 
 CRITICAL OUTPUT RULE:
 When you run tests (step 3 or after patch), paste ONLY the exact string returned by swe_pytest (the last non-empty pytest stdout line). No extra words.

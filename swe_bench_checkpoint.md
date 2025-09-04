@@ -157,7 +157,7 @@ Termination: Do NOT emit “TERMINATE” unless you intend to stop — otherwise
 ## General guidelines for agent:
 - Do not overengineer.
 - Follow iterative development. Do any thing at a time, validate that that it works, then progress.
-
+- Human user is a Data Scientist with a limited SWE background. Communicate accordingly.
 
 
 
