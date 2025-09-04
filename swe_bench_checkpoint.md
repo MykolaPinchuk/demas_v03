@@ -1,4 +1,29 @@
 SWE-Bench Checkpoint
+## Revised Fast-Iteration Plan (P0 → P3)
+
+- **Constraints**: Python-only; internet only for `git clone` and `pip install`; provider Chutes; per-run target ≤ 30s; prioritize speed and simplicity.
+
+- **Iteration 0: Baseline + Fast Image**
+  - Build a Docker image `swebench-lite:py3.10` preinstalling `pytest`, `numpy`, `pandas`.
+  - Single runner script: clone → install → pytest with strict stage timeouts (clone 5s, install 20s, tests 5s).
+  - Emit compact JSON result and pytest tail into `sandbox/runs/<ts>/`.
+
+- **Iteration 1: Stable Seeds**
+  - Add a local `seed_tasks.jsonl` with a few tiny numpy/pandas repos/refs and optional `-k` filters.
+  - CLI can run via direct args or `--task-id` from the seeds file.
+
+- **Iteration 2: Patch Application**
+  - Accept a unified diff; apply inside the same container prior to running tests; record before/after pytest tails.
+  - Guardrails: reject oversized/complex diffs to maintain speed.
+
+- **Iteration 3: One-Agent Integration**
+  - Expose tools `swe_clone`, `swe_install`, `swe_apply_patch`, `swe_pytest` with same timeouts.
+  - Terminate on pytest tail patterns or max turns; capture model usage if available.
+
+- **Cross-cutting**
+  - Deterministic outputs (JSON result schema: `{task_id, repo, ref, pytest_k, status, duration_s, tail}`).
+  - Minimal logs and artifacts to keep I/O small; per-stage timeouts enforce the 30s cap.
+  - Keep container offline except for `pip install`.
 1. High-Level Plan
 
 We are building an evaluation harness for SWE-bench problems (software engineering tasks from real GitHub issues/PRs).
