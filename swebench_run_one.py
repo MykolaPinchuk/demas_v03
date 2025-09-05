@@ -47,12 +47,35 @@ def run_baseline(task: Dict[str, Any]) -> int:
     return 0
 
 
-def run_agent(task: Dict[str, Any]) -> int:
+def run_agent(task: Dict[str, Any], *, model: str, temperature: float, max_turns: int) -> int:
     env = os.environ.copy()
     env.setdefault("SWE_IMAGE", "swebench-lite:py3.10")
     env["TARGET_REPO"] = task.get("repo", "")
     env["TARGET_REF"] = task.get("ref", "")
     env["PYTEST_K"] = task.get("pytest_k", "")
+    # per-task timeouts
+    to = task.get("timeouts", {}) or {}
+    if isinstance(to, dict):
+        if to.get("clone"):
+            env["TIMEOUT_CLONE"] = str(int(to["clone"]))
+        if to.get("install"):
+            env["TIMEOUT_INSTALL"] = str(int(to["install"]))
+        if to.get("test"):
+            env["TIMEOUT_TEST"] = str(int(to["test"]))
+    # logging base dir
+    from datetime import datetime
+    ts = datetime.utcnow().strftime("%Y%m%d_%H%M%S")
+    out_dir = os.path.join(ROOT, "sandbox", "agent_batch_runs", ts)
+    os.makedirs(os.path.join(out_dir, "logs"), exist_ok=True)
+    env["RUN_BASE_DIR"] = out_dir
+    env["TASK_ID"] = task.get("task_id", "single")
+    # model config
+    if model:
+        env["MODEL_NAME"] = model
+    if temperature is not None:
+        env["MODEL_TEMPERATURE"] = str(temperature)
+    if max_turns:
+        env["MAX_TURNS"] = str(int(max_turns))
     if not env.get("CHUTES_API_KEY"):
         raise SystemExit("CHUTES_API_KEY not set")
     subprocess.run([sys.executable, os.path.join(ROOT, "team_swebench_oneagent.py")], env=env, check=False)
@@ -63,13 +86,26 @@ def main(argv: list[str]) -> int:
     import argparse
     parser = argparse.ArgumentParser(description="Run one SWE task (baseline or agent)")
     parser.add_argument("--tasks", default=os.path.join(ROOT, "sandbox", "swe_tasks.jsonl"))
+    parser.add_argument("--swe-input", default=os.path.join(ROOT, "sandbox", "swe_official.jsonl"), help="Optional SWE official JSONL input (adapter)")
     parser.add_argument("--task-id", required=True)
     parser.add_argument("--agent", action="store_true", help="Use agent mode instead of baseline")
+    parser.add_argument("--model", default=os.environ.get("MODEL_NAME", ""))
+    parser.add_argument("--temperature", type=float, default=float(os.environ.get("MODEL_TEMPERATURE", "0.2")))
+    parser.add_argument("--max-turns", dest="max_turns", type=int, default=int(os.environ.get("MAX_TURNS", "10")))
     args = parser.parse_args(argv)
 
-    task = load_task(args.tasks, args.task_id)
+    # Try local tasks first; if not found, try adapter input
+    try:
+        task = load_task(args.tasks, args.task_id)
+    except SystemExit:
+        from swebench_adapter import load_official_tasks
+        alt = load_official_tasks(args.swe_input)
+        found = [t for t in alt if t.get("task_id") == args.task_id]
+        if not found:
+            raise
+        task = found[0]
     if args.agent:
-        return run_agent(task)
+        return run_agent(task, model=args.model, temperature=args.temperature, max_turns=args.max_turns)
     else:
         return run_baseline(task)
 

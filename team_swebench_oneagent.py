@@ -3,8 +3,9 @@
 # pip install -U autogen-agentchat autogen-ext[openai]
 # docker build -f Dockerfile.swe -t swebench-lite:py3.10 .
 
-import os, shlex, time, asyncio, subprocess
-from typing import List, Optional
+import os, shlex, time, asyncio, subprocess, json, uuid
+from datetime import datetime
+from typing import List, Optional, Callable, Any, Dict
 
 from autogen_agentchat.agents import AssistantAgent
 from autogen_agentchat.teams import RoundRobinGroupChat
@@ -30,7 +31,7 @@ BASE_MODEL_INFO = {
 }
 
 DOCKER_IMAGE   = os.environ.get("SWE_IMAGE", "swebench-lite:py3.10")
-MAX_TURNS      = 10  # allow diagnostics, install, and one patch attempt
+MAX_TURNS      = int(os.environ.get("MAX_TURNS", "10"))  # allow diagnostics, install, and one patch attempt
 
 # Per-stage timeouts (seconds), aligned with baseline runner
 TIMEOUT_CLONE  = int(os.environ.get("TIMEOUT_CLONE", "5"))
@@ -40,15 +41,26 @@ DEPS_DIR      = "/workspace/_deps"  # persisted on host via volume mount
 
 TARGET_REPO = os.environ.get("TARGET_REPO", "https://github.com/pytest-dev/pytest")
 TARGET_REF  = os.environ.get("TARGET_REF", "")
-PYTEST_K    = os.environ.get("PYTEST_K", "collection")  # example; empty = full run
+PYTEST_K    = os.environ.get("PYTEST_K", "")  # default to empty (no filter)
+
+# Model override via env
+MODEL_NAME = os.environ.get("MODEL_NAME", "")
+MODEL_TEMPERATURE = float(os.environ.get("MODEL_TEMPERATURE", "0.2"))
+
+# Logging config
+RUN_BASE_DIR = os.environ.get("RUN_BASE_DIR", "")
+TASK_ID = os.environ.get("TASK_ID", "")
+RUN_ID = str(uuid.uuid4())
+LOG_DIR = os.path.join(RUN_BASE_DIR, "logs") if RUN_BASE_DIR else ""
+LOG_PATH = os.path.join(LOG_DIR, f"{TASK_ID or 'task'}.jsonl") if LOG_DIR else ""
 
 # ------------- model + preflight -------------
-def make_client(model_name: str) -> OpenAIChatCompletionClient:
+def make_client(model_name: str, *, temperature: float) -> OpenAIChatCompletionClient:
     return OpenAIChatCompletionClient(
         model=model_name,
         api_key=CHUTES_API_KEY,
         base_url=CHUTES_BASE_URL,
-        temperature=0.2,
+        temperature=temperature,
         include_name_in_message=True,
         model_info=BASE_MODEL_INFO,
     )
@@ -66,8 +78,17 @@ async def preflight(client: OpenAIChatCompletionClient) -> bool:
         return False
 
 async def pick_ready_model() -> OpenAIChatCompletionClient:
+    # If a specific model is requested, use it directly
+    if MODEL_NAME:
+        c = make_client(MODEL_NAME, temperature=MODEL_TEMPERATURE)
+        # Optional: quick preflight to validate creds
+        ok = await preflight(c)
+        if ok:
+            print(f"[preflight] Using model: {MODEL_NAME}")
+            return c
+        raise RuntimeError(f"Requested model not available: {MODEL_NAME}")
     for m in MODEL_CANDIDATES:
-        c = make_client(m)
+        c = make_client(m, temperature=MODEL_TEMPERATURE)
         if await preflight(c):
             print(f"[preflight] Using model: {m}")
             return c
@@ -75,6 +96,21 @@ async def pick_ready_model() -> OpenAIChatCompletionClient:
     raise RuntimeError("No model available for now.")
 
 # ---------------- docker helpers ----------------
+def ensure_docker_image() -> None:
+    try:
+        p = subprocess.run(["docker", "image", "inspect", DOCKER_IMAGE], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        if p.returncode != 0:
+            # Attempt to build from Dockerfile.swe in repo root
+            repo_root = os.path.abspath(os.path.dirname(__file__))
+            df = os.path.join(repo_root, "Dockerfile.swe")
+            if not os.path.isfile(df):
+                print(f"[warn] Dockerfile.swe not found at {df}; cannot auto-build image {DOCKER_IMAGE}")
+                return
+            print(f"[auto-build] Building missing image {DOCKER_IMAGE} from Dockerfile.swe...")
+            subprocess.run(["docker", "build", "-f", df, "-t", DOCKER_IMAGE, repo_root], check=False)
+    except Exception:
+        pass
+
 def _docker(cmd: str) -> tuple[int, str, str]:
     workdir = os.path.abspath("sandbox")
     os.makedirs(workdir, exist_ok=True)
@@ -82,8 +118,55 @@ def _docker(cmd: str) -> tuple[int, str, str]:
     p = subprocess.run(full, shell=True, text=True, capture_output=True)
     return p.returncode, p.stdout, p.stderr
 
+# -------- logging helpers --------
+def _ensure_log_dir() -> None:
+    if LOG_DIR:
+        os.makedirs(LOG_DIR, exist_ok=True)
+
+def _truncate(s: str, limit: int = 8192) -> str:
+    if s is None:
+        return ""
+    if len(s) <= limit:
+        return s
+    return s[:limit] + "...<truncated>"
+
+def _redact(obj: Any) -> Any:
+    try:
+        if isinstance(obj, dict):
+            redacted: Dict[str, Any] = {}
+            for k, v in obj.items():
+                if any(x in k.lower() for x in ["api_key", "apikey", "authorization", "token", "secret"]):
+                    redacted[k] = "***REDACTED***"
+                else:
+                    redacted[k] = _redact(v)
+            return redacted
+        if isinstance(obj, list):
+            return [_redact(x) for x in obj]
+        return obj
+    except Exception:
+        return obj
+
+def _log_record(record: Dict[str, Any]) -> None:
+    if not LOG_PATH:
+        return
+    _ensure_log_dir()
+    try:
+        with open(LOG_PATH, "a", encoding="utf-8") as f:
+            f.write(json.dumps(record, ensure_ascii=False) + "\n")
+    except Exception:
+        pass
+
+def _now_iso() -> str:
+    return datetime.utcnow().isoformat() + "Z"
+
 # ---- tools (must be async functions with type hints) ----
 async def swe_clone(*, repo_url: str, ref: Optional[str] = None) -> str:
+    _log_record({
+        "timestamp": _now_iso(), "role": "assistant", "content": "CALL swe_clone",
+        "tool_name": "swe_clone", "tool_args": _redact({"repo_url": repo_url, "ref": ref}),
+        "tool_result": "", "usage": None, "run_id": RUN_ID, "task_id": TASK_ID,
+        "model": MODEL_NAME or None, "temperature": MODEL_TEMPERATURE,
+    })
     cmds = [
         f"rm -rf project",
         f"timeout {TIMEOUT_CLONE}s git clone --depth 1 {shlex.quote(repo_url)} project",
@@ -93,7 +176,14 @@ async def swe_clone(*, repo_url: str, ref: Optional[str] = None) -> str:
             f"cd project && timeout {TIMEOUT_CLONE}s git fetch --depth 1 origin {shlex.quote(ref)} && git checkout -q {shlex.quote(ref)}"
         )
     code, out, err = _docker(" && ".join(cmds))
-    return "(cloned)" if code == 0 else f"(exit {code})\nSTDOUT:\n{out}\nSTDERR:\n{err}"
+    res = "(cloned)" if code == 0 else f"(exit {code})\nSTDOUT:\n{out}\nSTDERR:\n{err}"
+    _log_record({
+        "timestamp": _now_iso(), "role": "tool", "content": "", "tool_name": "swe_clone",
+        "tool_args": _redact({"repo_url": repo_url, "ref": ref}),
+        "tool_result": _truncate(res), "usage": None, "run_id": RUN_ID, "task_id": TASK_ID,
+        "model": MODEL_NAME or None, "temperature": MODEL_TEMPERATURE,
+    })
+    return res
 
 async def swe_install(*, req_file: str = "requirements.txt") -> str:
     cmd = (
@@ -104,22 +194,48 @@ async def swe_install(*, req_file: str = "requirements.txt") -> str:
         # If meson build artifacts exist, copy compiled .so into package dir to persist
         "if [ -d build ]; then so=$(find build -name '*_cfinancial*.so' | head -n1); "
         "if [ -n \"$so\" ]; then cp -f \"$so\" numpy_financial/; fi; fi && "
-        f"if [ -f {shlex.quote(req_file)} ]; then timeout {TIMEOUT_INSTALL}s python -m pip install -q -r {shlex.quote(req_file)}; else echo 'no requirements.txt'; fi"
+        f"if [ -f {shlex.quote(req_file)} ]; then timeout {TIMEOUT_INSTALL}s python -m pip install -q -r {shlex.quote(req_file)}; else echo 'no requirements.txt'; fi && "
+        # testing requirements if present
+        f"if [ -f testing/requirements.txt ]; then timeout {TIMEOUT_INSTALL}s python -m pip install -q -r testing/requirements.txt; else echo 'no testing/requirements.txt'; fi"
     )
+    _log_record({
+        "timestamp": _now_iso(), "role": "assistant", "content": "CALL swe_install",
+        "tool_name": "swe_install", "tool_args": _redact({"req_file": req_file}),
+        "tool_result": "", "usage": None, "run_id": RUN_ID, "task_id": TASK_ID,
+        "model": MODEL_NAME or None, "temperature": MODEL_TEMPERATURE,
+    })
     code, out, err = _docker(cmd)
-    return (out or "ok").strip() if code == 0 else f"(exit {code})\nSTDOUT:\n{out}\nSTDERR:\n{err}"
+    res = (out or "ok").strip() if code == 0 else f"(exit {code})\nSTDOUT:\n{out}\nSTDERR:\n{err}"
+    _log_record({
+        "timestamp": _now_iso(), "role": "tool", "content": "", "tool_name": "swe_install",
+        "tool_args": _redact({"req_file": req_file}),
+        "tool_result": _truncate(res), "usage": None, "run_id": RUN_ID, "task_id": TASK_ID,
+        "model": MODEL_NAME or None, "temperature": MODEL_TEMPERATURE,
+    })
+    return res
 
 async def swe_pytest(*, pytest_args: str = "-q") -> str:
     cmd = (
         f"export PYTHONPATH={DEPS_DIR}:$PYTHONPATH; "
         f"cd project && timeout {TIMEOUT_TEST}s python -m pytest {pytest_args}"
     )
+    _log_record({
+        "timestamp": _now_iso(), "role": "assistant", "content": "CALL swe_pytest",
+        "tool_name": "swe_pytest", "tool_args": _redact({"pytest_args": pytest_args}),
+        "tool_result": "", "usage": None, "run_id": RUN_ID, "task_id": TASK_ID,
+        "model": MODEL_NAME or None, "temperature": MODEL_TEMPERATURE,
+    })
     code, out, err = _docker(cmd)
-    # Always return ONLY the last non-empty line of stdout
     last = [ln for ln in (out or "").splitlines() if ln.strip()]
     tail = last[-1] if last else ""
-    # Even on failure we just return the tail (so termination can catch it)
-    return tail or "(no stdout)"
+    res = tail or "(no stdout)"
+    _log_record({
+        "timestamp": _now_iso(), "role": "tool", "content": "", "tool_name": "swe_pytest",
+        "tool_args": _redact({"pytest_args": pytest_args}),
+        "tool_result": _truncate(res), "usage": None, "run_id": RUN_ID, "task_id": TASK_ID,
+        "model": MODEL_NAME or None, "temperature": MODEL_TEMPERATURE,
+    })
+    return res
 
 async def swe_pytest_full(*, pytest_args: str = "-q -x -vv") -> str:
     """Run pytest and return the last ~200 lines of combined stdout+stderr, with ' passed' sanitized
@@ -128,13 +244,25 @@ async def swe_pytest_full(*, pytest_args: str = "-q -x -vv") -> str:
         f"export PYTHONPATH={DEPS_DIR}:$PYTHONPATH; "
         f"cd project && timeout {TIMEOUT_TEST}s python -m pytest {pytest_args}"
     )
+    _log_record({
+        "timestamp": _now_iso(), "role": "assistant", "content": "CALL swe_pytest_full",
+        "tool_name": "swe_pytest_full", "tool_args": _redact({"pytest_args": pytest_args}),
+        "tool_result": "", "usage": None, "run_id": RUN_ID, "task_id": TASK_ID,
+        "model": MODEL_NAME or None, "temperature": MODEL_TEMPERATURE,
+    })
     code, out, err = _docker(cmd)
     text = (out or "") + ("\n" + err if err else "")
     lines = [ln for ln in text.splitlines() if ln is not None]
     tail_block = "\n".join(lines[-200:])
-    # sanitize ' passed' phrases to avoid accidental termination
     safe = tail_block.replace(" passed in ", " p✓ssed in ").replace(" passed", " p✓ssed")
-    return safe or "(no output)"
+    res = safe or "(no output)"
+    _log_record({
+        "timestamp": _now_iso(), "role": "tool", "content": "", "tool_name": "swe_pytest_full",
+        "tool_args": _redact({"pytest_args": pytest_args}),
+        "tool_result": _truncate(res), "usage": None, "run_id": RUN_ID, "task_id": TASK_ID,
+        "model": MODEL_NAME or None, "temperature": MODEL_TEMPERATURE,
+    })
+    return res
 
 async def swe_read_file(*, path: str, max_bytes: int = 20000) -> str:
     """Read a file inside the project (relative path), returning up to max_bytes."""
@@ -143,8 +271,21 @@ async def swe_read_file(*, path: str, max_bytes: int = 20000) -> str:
     cmd = (
         f"cd project && if [ -f {rp} ]; then head -c {mb} -- {rp}; else echo '(file not found)'; fi"
     )
+    _log_record({
+        "timestamp": _now_iso(), "role": "assistant", "content": "CALL swe_read_file",
+        "tool_name": "swe_read_file", "tool_args": _redact({"path": path, "max_bytes": max_bytes}),
+        "tool_result": "", "usage": None, "run_id": RUN_ID, "task_id": TASK_ID,
+        "model": MODEL_NAME or None, "temperature": MODEL_TEMPERATURE,
+    })
     code, out, err = _docker(cmd)
-    return (out or "(empty)") if code == 0 else f"(exit {code})\nSTDOUT:\n{out}\nSTDERR:\n{err}"
+    res = (out or "(empty)") if code == 0 else f"(exit {code})\nSTDOUT:\n{out}\nSTDERR:\n{err}"
+    _log_record({
+        "timestamp": _now_iso(), "role": "tool", "content": "", "tool_name": "swe_read_file",
+        "tool_args": _redact({"path": path, "max_bytes": max_bytes}),
+        "tool_result": _truncate(res), "usage": None, "run_id": RUN_ID, "task_id": TASK_ID,
+        "model": MODEL_NAME or None, "temperature": MODEL_TEMPERATURE,
+    })
+    return res
 
 async def swe_pip_install(*, packages: str) -> str:
     """Install one or more packages via pip (space-separated)."""
@@ -155,10 +296,30 @@ async def swe_pip_install(*, packages: str) -> str:
         f"mkdir -p {DEPS_DIR} && "
         f"timeout {TIMEOUT_INSTALL}s python -m pip install -q -t {DEPS_DIR} {shlex.quote(pk)}"
     )
+    _log_record({
+        "timestamp": _now_iso(), "role": "assistant", "content": "CALL swe_pip_install",
+        "tool_name": "swe_pip_install", "tool_args": _redact({"packages": packages}),
+        "tool_result": "", "usage": None, "run_id": RUN_ID, "task_id": TASK_ID,
+        "model": MODEL_NAME or None, "temperature": MODEL_TEMPERATURE,
+    })
     code, out, err = _docker(cmd)
-    return "ok" if code == 0 else f"(exit {code})\nSTDOUT:\n{out}\nSTDERR:\n{err}"
+    res = "ok" if code == 0 else f"(exit {code})\nSTDOUT:\n{out}\nSTDERR:\n{err}"
+    _log_record({
+        "timestamp": _now_iso(), "role": "tool", "content": "", "tool_name": "swe_pip_install",
+        "tool_args": _redact({"packages": packages}),
+        "tool_result": _truncate(res), "usage": None, "run_id": RUN_ID, "task_id": TASK_ID,
+        "model": MODEL_NAME or None, "temperature": MODEL_TEMPERATURE,
+    })
+    return res
 async def swe_apply_patch_text(*, diff_text: str) -> str:
     # Write diff into workspace and apply within the repo
+    _log_record({
+        "timestamp": _now_iso(), "role": "assistant", "content": "CALL swe_apply_patch_text",
+        "tool_name": "swe_apply_patch_text",
+        "tool_args": _redact({"diff_text": f"<diff_len={len(diff_text)}>"}),
+        "tool_result": "", "usage": None, "run_id": RUN_ID, "task_id": TASK_ID,
+        "model": MODEL_NAME or None, "temperature": MODEL_TEMPERATURE,
+    })
     script = (
         "set -e\n"
         "cd /workspace\n"
@@ -167,19 +328,70 @@ async def swe_apply_patch_text(*, diff_text: str) -> str:
         "timeout 3s git apply /workspace/patch.diff && echo PATCH_APPLIED || (echo PATCH_FAILED >&2; exit 3)\n"
     )
     code, out, err = _docker(script)
-    return (out or "").strip() if code == 0 else f"(exit {code})\nSTDOUT:\n{out}\nSTDERR:\n{err}"
+    res = (out or "").strip() if code == 0 else f"(exit {code})\nSTDOUT:\n{out}\nSTDERR:\n{err}"
+    _log_record({
+        "timestamp": _now_iso(), "role": "tool", "content": "", "tool_name": "swe_apply_patch_text",
+        "tool_args": _redact({"diff_text": f"<diff_len={len(diff_text)}>"}),
+        "tool_result": _truncate(res), "usage": None, "run_id": RUN_ID, "task_id": TASK_ID,
+        "model": MODEL_NAME or None, "temperature": MODEL_TEMPERATURE,
+    })
+    return res
+
+# ------------- tool wrappers for logging -------------
+def _wrap_tool(func: Callable[..., Any], name: str) -> Callable[..., Any]:
+    async def _wrapped(**kwargs):
+        # log call
+        _log_record({
+            "timestamp": _now_iso(),
+            "role": "assistant",
+            "content": f"CALL {name}",
+            "tool_name": name,
+            "tool_args": _redact(kwargs),
+            "tool_result": "",
+            "usage": None,
+            "run_id": RUN_ID,
+            "task_id": TASK_ID,
+            "model": MODEL_NAME or None,
+            "temperature": MODEL_TEMPERATURE,
+        })
+        res = await func(**kwargs)
+        _log_record({
+            "timestamp": _now_iso(),
+            "role": "tool",
+            "content": "",
+            "tool_name": name,
+            "tool_args": _redact(kwargs),
+            "tool_result": _truncate(res if isinstance(res, str) else str(res)),
+            "usage": None,
+            "run_id": RUN_ID,
+            "task_id": TASK_ID,
+            "model": MODEL_NAME or None,
+            "temperature": MODEL_TEMPERATURE,
+        })
+        return res
+    return _wrapped
 
 # ---------------- main ----------------
 async def main():
     if not CHUTES_API_KEY:
         raise RuntimeError("CHUTES_API_KEY is not set in the environment.")
+    # ensure docker image exists (auto-build if missing)
+    ensure_docker_image()
     model = await pick_ready_model()
 
     # One agent with the tools
     runner = AssistantAgent(
         "Runner",
         model_client=model,
-        tools=[swe_clone, swe_install, swe_pytest, swe_apply_patch_text, swe_pytest_full, swe_read_file, swe_pip_install],
+        tools=[
+            swe_clone,
+            swe_install,
+            swe_pytest,
+            swe_apply_patch_text,
+            swe_pytest_full,
+            swe_read_file,
+            swe_pip_install,
+        ],
     )
 
     # Terminate on any typical pytest tail (pass/fail/error/summary) or cap turns
@@ -210,10 +422,48 @@ When you run tests (step 3 or after patch), paste ONLY the exact string returned
 """
 
     t0 = time.time()
+    # initial log record
+    if LOG_PATH:
+        _log_record({
+            "timestamp": _now_iso(),
+            "role": "system",
+            "content": "run_started",
+            "tool_name": None,
+            "tool_args": None,
+            "tool_result": None,
+            "usage": None,
+            "run_id": RUN_ID,
+            "task_id": TASK_ID,
+            "model": MODEL_NAME or getattr(model, "model", None),
+            "temperature": MODEL_TEMPERATURE,
+            "started_at": _now_iso(),
+        })
     res = await Console(team.run_stream(task=task))
     print(f"\n--- SUMMARY ---\nElapsed seconds: {time.time() - t0:.2f}")
     try:
         print(f"Messages: {len(res.messages)}")
+    except Exception:
+        pass
+    # log terminal tail line as assistant content if detectable via messages
+    try:
+        for m in getattr(res, "messages", []) or []:
+            role = getattr(m, "source", None) or getattr(m, "role", "assistant")
+            content = getattr(m, "content", "")
+            if isinstance(content, list):
+                content = " ".join(str(x) for x in content)
+            _log_record({
+                "timestamp": _now_iso(),
+                "role": str(role),
+                "content": _truncate(str(content)),
+                "tool_name": None,
+                "tool_args": None,
+                "tool_result": None,
+                "usage": getattr(m, "usage", None),
+                "run_id": RUN_ID,
+                "task_id": TASK_ID,
+                "model": MODEL_NAME or getattr(model, "model", None),
+                "temperature": MODEL_TEMPERATURE,
+            })
     except Exception:
         pass
 
