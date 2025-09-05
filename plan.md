@@ -103,8 +103,3 @@ Example line:
   - `CHUTES_API_KEY=... python swebench_run_one.py --task-id <id> --agent`
 - Agent, batch:
   - `CHUTES_API_KEY=... python swebench_agent_batch.py --seeds sandbox/swe_tasks.jsonl`
-
-## General guidelines for agent
-- Do not over-engineer.
-- Iterate: make one change, validate, then proceed.
-- Communicate for a data scientist audience: keep instructions clear and concrete.
