@@ -190,7 +190,8 @@ async def swe_install(*, req_file: str = "requirements.txt") -> str:
         "cd project && "
         "python -m pip install -q -U pip && "
         "timeout 10s python -m pip install -q hatchling hatch-vcs meson-python ninja cython || true && "
-        f"timeout {TIMEOUT_INSTALL}s python -m pip install -q -e . || true && "
+        # Try editable install first, then fallback to regular install if it fails
+        f"(timeout {TIMEOUT_INSTALL}s python -m pip install -q -e . || timeout {TIMEOUT_INSTALL}s python -m pip install -q . || true) && "
         # If meson build artifacts exist, copy compiled .so into package dir to persist
         "if [ -d build ]; then so=$(find build -name '*_cfinancial*.so' | head -n1); "
         "if [ -n \"$so\" ]; then cp -f \"$so\" numpy_financial/; fi; fi && "
@@ -214,9 +215,105 @@ async def swe_install(*, req_file: str = "requirements.txt") -> str:
     })
     return res
 
+async def swe_pytest_auto(*, pytest_args: str = "-q") -> str:
+    """Run pytest; if ModuleNotFoundError occurs, attempt to install the missing
+    module via pip (site-packages under DEPS_DIR), then re-run tests once.
+    Returns the final pytest tail line or a brief diagnostic string.
+    """
+    # Log call
+    _log_record({
+        "timestamp": _now_iso(), "role": "assistant", "content": "CALL swe_pytest_auto",
+        "tool_name": "swe_pytest_auto", "tool_args": _redact({"pytest_args": pytest_args}),
+        "tool_result": "", "usage": None, "run_id": RUN_ID, "task_id": TASK_ID,
+        "model": MODEL_NAME or None, "temperature": MODEL_TEMPERATURE,
+    })
+
+    # First attempt
+    cmd = (
+        f"export PYTHONPATH=/workspace/project:/workspace/project/src:{DEPS_DIR}:$PYTHONPATH; "
+        f"cd project && timeout {TIMEOUT_TEST}s python -m pytest {pytest_args}"
+    )
+    code, out, err = _docker(cmd)
+    combined = (out or "") + ("\n" + err if err else "")
+    last = [ln for ln in (out or "").splitlines() if ln.strip()]
+    tail = last[-1] if last else ""
+
+    # Detect ModuleNotFoundError
+    missing = None
+    for line in combined.splitlines():
+        line = line.strip()
+        if "ModuleNotFoundError:" in line and "No module named" in line:
+            # try to extract 'package' from No module named 'package'
+            import re
+            m = re.search(r"No module named ['\"]([A-Za-z0-9_\-\.]+)['\"]", line)
+            if m:
+                missing = m.group(1)
+                break
+
+    if missing:
+        # Attempt to install the missing module
+        _log_record({
+            "timestamp": _now_iso(), "role": "assistant", "content": f"Detected missing module: {missing}; attempting pip install",
+            "tool_name": "swe_pytest_auto", "tool_args": _redact({"missing": missing}),
+            "tool_result": "", "usage": None, "run_id": RUN_ID, "task_id": TASK_ID,
+            "model": MODEL_NAME or None, "temperature": MODEL_TEMPERATURE,
+        })
+        # Prefer installing the top-level package name
+        top_pkg = missing.split(".")[0]
+        # Try re-running local install to capture src-layout packages
+        try:
+            _ = await swe_install()
+        except Exception:
+            pass
+        # Verify import with local path first
+        verify_cmd = (
+            f"export PYTHONPATH=/workspace/project:{DEPS_DIR}:$PYTHONPATH; "
+            f"python -c 'import {top_pkg}; print(\"ok\")'"
+        )
+        vcode, vout, verr = _docker(verify_cmd)
+        if vcode != 0:
+            # Install via pip into deps dir
+            try:
+                install_res = await swe_pip_install(packages=top_pkg)
+                _log_record({
+                    "timestamp": _now_iso(), "role": "tool", "content": "", "tool_name": "swe_pip_install",
+                    "tool_args": _redact({"packages": top_pkg}),
+                    "tool_result": _truncate(install_res), "usage": None, "run_id": RUN_ID, "task_id": TASK_ID,
+                    "model": MODEL_NAME or None, "temperature": MODEL_TEMPERATURE,
+                })
+            except Exception as e:
+                _log_record({
+                    "timestamp": _now_iso(), "role": "tool", "content": "", "tool_name": "swe_pip_install",
+                    "tool_args": _redact({"packages": top_pkg}),
+                    "tool_result": _truncate(f"install_error: {e}"), "usage": None, "run_id": RUN_ID, "task_id": TASK_ID,
+                    "model": MODEL_NAME or None, "temperature": MODEL_TEMPERATURE,
+                })
+        # Re-run pytest and return the tail
+        code2, out2, err2 = _docker(cmd)
+        last2 = [ln for ln in (out2 or "").splitlines() if ln.strip()]
+        tail2 = last2[-1] if last2 else ""
+        res = tail2 or (last[-1] if last else tail) or "(no stdout)"
+        _log_record({
+            "timestamp": _now_iso(), "role": "tool", "content": "", "tool_name": "swe_pytest_auto",
+            "tool_args": _redact({"pytest_args": pytest_args}),
+            "tool_result": _truncate(res), "usage": None, "run_id": RUN_ID, "task_id": TASK_ID,
+            "model": MODEL_NAME or None, "temperature": MODEL_TEMPERATURE,
+        })
+        return res
+
+    # No missing module detected; return original tail
+    res = tail or "(no stdout)"
+    _log_record({
+        "timestamp": _now_iso(), "role": "tool", "content": "", "tool_name": "swe_pytest_auto",
+        "tool_args": _redact({"pytest_args": pytest_args}),
+        "tool_result": _truncate(res), "usage": None, "run_id": RUN_ID, "task_id": TASK_ID,
+        "model": MODEL_NAME or None, "temperature": MODEL_TEMPERATURE,
+    })
+    return res
+
 async def swe_pytest(*, pytest_args: str = "-q") -> str:
     cmd = (
-        f"export PYTHONPATH={DEPS_DIR}:$PYTHONPATH; "
+        f"export PYTHONPATH=/workspace/project:/workspace/project/src:{DEPS_DIR}:$PYTHONPATH; "
         f"cd project && timeout {TIMEOUT_TEST}s python -m pytest {pytest_args}"
     )
     _log_record({
@@ -241,7 +338,7 @@ async def swe_pytest_full(*, pytest_args: str = "-q -x -vv") -> str:
     """Run pytest and return the last ~200 lines of combined stdout+stderr, with ' passed' sanitized
     to avoid triggering termination conditions inadvertently."""
     cmd = (
-        f"export PYTHONPATH={DEPS_DIR}:$PYTHONPATH; "
+        f"export PYTHONPATH=/workspace/project:/workspace/project/src:{DEPS_DIR}:$PYTHONPATH; "
         f"cd project && timeout {TIMEOUT_TEST}s python -m pytest {pytest_args}"
     )
     _log_record({
@@ -387,6 +484,7 @@ async def main():
             swe_clone,
             swe_install,
             swe_pytest,
+            swe_pytest_auto,
             swe_apply_patch_text,
             swe_pytest_full,
             swe_read_file,
@@ -412,9 +510,9 @@ Use ONLY the provided tools. Keep outputs minimal.
 Steps:
 1) swe_clone(repo_url="{TARGET_REPO}", ref="{TARGET_REF}")
 2) swe_install()    # installs project and test deps if present
-3) Run tests: swe_pytest(pytest_args="-q {kline}".strip()) and report the tail.
-4) If tests fail, get diagnostics using swe_pytest_full(pytest_args="-q -x -vv"). If helpful, open specific files via swe_read_file(path="...").
-5) If diagnostics indicate a missing package, install it using swe_pip_install(packages="<name>") and re-run tests once.
+3) Run tests using swe_pytest_auto(pytest_args="-q {kline}".strip()). It will auto-install a missing module if pytest shows ModuleNotFoundError, then re-run tests once. Paste ONLY the returned tail.
+4) If tests still fail, get diagnostics using swe_pytest_full(pytest_args="-q -x -vv"). If helpful, open specific files via swe_read_file(path="...").
+5) If diagnostics indicate a missing package that was not auto-installed, install it using swe_pip_install(packages="<name>") and re-run tests once via swe_pytest.
 6) Attempt EXACTLY ONE minimal unified diff patch (keep it small). Apply via swe_apply_patch_text(diff_text=...). Then re-run tests with swe_pytest and paste ONLY the returned tail. After this second test run, STOP.
 
 CRITICAL OUTPUT RULE:

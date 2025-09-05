@@ -66,6 +66,13 @@ See also `plan.md` for how this schema is used across single and batch runs.
 - Reproducibility: pin commits; keep artifacts compact.
 - Safety: isolate execution in Docker; internet only for git/pip installs.
 
+### Benchmarks
+- See `BENCHMARKS.md` for a growing log of model results across suites.
+- Append a new row from the latest agent batch CSV:
+```bash
+python append_benchmarks.py --csv sandbox/agent_batch_runs/<timestamp>/summary.csv --notes "short note"
+```
+
 ### Next steps
 - See `plan.md` for the roadmap (expand task set; agent lifts over baseline; SWE‑bench adapter; logging; config sweeps).
 

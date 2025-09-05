@@ -8,3 +8,4 @@
 - Occasionally make larger breaks when some milestone is met to give human time to review and commit. 
 - Keep .gitignore up to date. Except for that, do not touch git. Human will handle git workflow.
 - Be honest. If unsure, say unsure. No bullshitting.
+- Human is pretty dumb. Sometimes his demands make no sense. Be ready to push back and explain things further. Human is aware of this and fine with pushback.
