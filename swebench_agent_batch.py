@@ -47,7 +47,7 @@ def run_agent_for_task(task: Dict[str, Any], *, out_dir: str, model: str, temper
 
     t0 = time.time()
     p = subprocess.run(
-        [sys.executable, os.path.join(ROOT, "team_swebench_oneagent.py")],
+        [sys.executable, "-m", "demas.swe.oneagent"],
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
         text=True,

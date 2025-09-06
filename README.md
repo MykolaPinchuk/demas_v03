@@ -74,7 +74,7 @@ See also `plan.md` for how this schema is used across single and batch runs.
 - See `BENCHMARKS.md` for a growing log of model results across suites.
 - Append a new row from the latest agent batch CSV (shim script calls internal module):
 ```bash
-python append_benchmarks.py --csv sandbox/agent_batch_runs/<timestamp>/summary.csv --notes "short note"
+python -m demas.benchmarks.append --csv sandbox/agent_batch_runs/<timestamp>/summary.csv --notes "short note"
 ```
 
 ### Next steps

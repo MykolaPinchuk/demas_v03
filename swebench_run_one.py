@@ -78,7 +78,7 @@ def run_agent(task: Dict[str, Any], *, model: str, temperature: float, max_turns
         env["MAX_TURNS"] = str(int(max_turns))
     if not env.get("CHUTES_API_KEY"):
         raise SystemExit("CHUTES_API_KEY not set")
-    subprocess.run([sys.executable, os.path.join(ROOT, "team_swebench_oneagent.py")], env=env, check=False)
+    subprocess.run([sys.executable, "-m", "demas.swe.oneagent"], env=env, check=False)
     return 0
 
 

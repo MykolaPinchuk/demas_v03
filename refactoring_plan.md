@@ -59,3 +59,41 @@ Validation
 - Compare: printed tails, statuses, artifact locations, CSV headers/footers.
 
 
+## Status (completed)
+- Phase 0 complete: shared IO/summaries; batch scripts refactored; parity validated.
+- Phase 1 complete: shared docker exec + config wired into runners; parity validated.
+- Phase 2 mostly complete: adapter/benchmarks moved under `demas/`; README updated; `.gitignore` updated.
+- Cleanup: removed legacy `repo_validate_docker_v5.py`, removed `append_benchmarks.py` shim, removed `swebench_adapter.py` shim.
+
+## Next agents: implementation checklist
+Goal: finish hiding complexity at root while keeping UX intact.
+
+1) One-agent module migration
+   - Move the implementation from `team_swebench_oneagent.py` into `demas/swe/oneagent.py`.
+   - Ensure `python -m demas.swe.oneagent` runs standalone (no root imports).
+   - Update `swebench_run_one.py` and `swebench_agent_batch.py` to continue invoking `python -m demas.swe.oneagent` (already done).
+   - Validate: run single agent task and a small agent batch; verify outputs unchanged.
+   - Remove `team_swebench_oneagent.py` from repo root once validated.
+
+2) Documentation refresh
+   - README: confirm examples reference module path for one-agent where appropriate.
+   - Keep only the following CLIs at root: `swebench_run_one.py`, `swebench_batch.py`, `swebench_agent_batch.py`.
+   - Verify all references to removed shims are gone.
+
+3) Guards and ignore config
+   - Confirm `.gitignore` excludes sandbox outputs and caches; keep task JSONLs tracked.
+   - Confirm `context_ignore.md` remains aligned to avoid context bloat.
+
+4) Final validation
+   - Baseline batch (limit 2) and agent batch (limit 2) passing, artifacts identical in shape.
+   - Optional: append benchmark row via `python -m demas.benchmarks.append`.
+
+## Known hiccups and editing tips (for next agents)
+- Large single-shot edits to `team_swebench_oneagent.py` and `demas/swe/oneagent.py` caused diff timeouts. Prefer incremental moves:
+  - First migrate imports/helpers, then tools, then `main()`.
+  - If a full-file rewrite is required, consider replacing the entire file content in one operation.
+- Current callers already use the module path: runners invoke `python -m demas.swe.oneagent`.
+- Transitional state: `demas/swe/oneagent.py` currently wraps the root file’s `main()`; finish migration by inlining code, validate, then delete the root file.
+- After each step, re-run quick validations (single task + 2-task batch) to ensure parity.
+
+
