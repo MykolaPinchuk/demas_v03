@@ -84,14 +84,36 @@ def run_agent(task: Dict[str, Any], *, model: str, temperature: float, max_turns
 
 def main(argv: list[str]) -> int:
     import argparse
-    parser = argparse.ArgumentParser(description="Run one SWE task (baseline or agent)")
-    parser.add_argument("--tasks", default=os.path.join(ROOT, "sandbox", "swe_tasks.jsonl"))
-    parser.add_argument("--swe-input", default=os.path.join(ROOT, "sandbox", "swe_official.jsonl"), help="Optional SWE official JSONL input (adapter)")
-    parser.add_argument("--task-id", required=True)
-    parser.add_argument("--agent", action="store_true", help="Use agent mode instead of baseline")
-    parser.add_argument("--model", default=os.environ.get("MODEL_NAME", ""))
-    parser.add_argument("--temperature", type=float, default=float(os.environ.get("MODEL_TEMPERATURE", "0.2")))
-    parser.add_argument("--max-turns", dest="max_turns", type=int, default=int(os.environ.get("MAX_TURNS", "10")))
+    parser = argparse.ArgumentParser(
+        description="Run a single SWE-style task. Baseline by default; use --agent for the one-agent flow.")
+    parser.add_argument(
+        "--tasks",
+        default=os.path.join(ROOT, "sandbox", "swe_tasks.jsonl"),
+        help="Path to local tasks JSONL (default: sandbox/swe_tasks.jsonl)")
+    parser.add_argument(
+        "--swe-input",
+        default=os.path.join(ROOT, "sandbox", "swe_official.jsonl"),
+        help="Optional SWE official JSONL; used if --task-id not found in --tasks (adapter path)")
+    parser.add_argument("--task-id", required=True, help="Task identifier to run")
+    parser.add_argument(
+        "--agent",
+        action="store_true",
+        help="Use agent mode instead of baseline (requires CHUTES_API_KEY)")
+    parser.add_argument(
+        "--model",
+        default=os.environ.get("MODEL_NAME", ""),
+        help="Model name for agent mode (env MODEL_NAME as default; e.g., moonshotai/Kimi-K2-Instruct-0905)")
+    parser.add_argument(
+        "--temperature",
+        type=float,
+        default=float(os.environ.get("MODEL_TEMPERATURE", "0.2")),
+        help="Sampling temperature for agent mode (default from env MODEL_TEMPERATURE or 0.2)")
+    parser.add_argument(
+        "--max-turns",
+        dest="max_turns",
+        type=int,
+        default=int(os.environ.get("MAX_TURNS", "10")),
+        help="Maximum agent turns before termination (default from env MAX_TURNS or 10)")
     args = parser.parse_args(argv)
 
     # Try local tasks first; if not found, try adapter input

@@ -8,33 +8,15 @@ import subprocess
 from datetime import datetime
 from typing import List, Dict, Any
 
+from demas.core.io import load_seed_tasks
+from demas.core.summaries import write_agent_csv
+
 
 ROOT = os.path.abspath(os.path.dirname(__file__))
 SANDBOX = os.path.join(ROOT, "sandbox")
 SEEDS_DEFAULT = os.path.join(SANDBOX, "seed_tasks.jsonl")
 
 TAIL_RE = re.compile(r"(\d+\s+(passed|failed|errors?|error|skipped|deselected).*)")
-
-
-def load_seed_tasks(path: str) -> List[Dict[str, Any]]:
-    tasks: List[Dict[str, Any]] = []
-    seen_ids = set()
-    with open(path, "r", encoding="utf-8") as f:
-        for line in f:
-            line = line.strip()
-            if not line:
-                continue
-            try:
-                rec = json.loads(line)
-            except json.JSONDecodeError:
-                continue
-            tid = rec.get("task_id")
-            if tid and tid in seen_ids:
-                continue
-            if tid:
-                seen_ids.add(tid)
-            tasks.append(rec)
-    return tasks
 
 
 def run_agent_for_task(task: Dict[str, Any], *, out_dir: str, model: str, temperature: float, max_turns: int) -> Dict[str, Any]:
@@ -108,11 +90,11 @@ def run_agent_for_task(task: Dict[str, Any], *, out_dir: str, model: str, temper
 def main(argv: List[str]) -> int:
     import argparse
     parser = argparse.ArgumentParser(description="Agent batch runner for SWE seeds")
-    parser.add_argument("--seeds", default=SEEDS_DEFAULT, help="Path to seed JSONL file")
-    parser.add_argument("--limit", type=int, default=0, help="Limit number of tasks (0 = all)")
-    parser.add_argument("--model", default=os.environ.get("MODEL_NAME", ""), help="Model name (overrides env MODEL_NAME)")
-    parser.add_argument("--temperature", type=float, default=float(os.environ.get("MODEL_TEMPERATURE", "0.2")), help="Sampling temperature (overrides env MODEL_TEMPERATURE)")
-    parser.add_argument("--max-turns", dest="max_turns", type=int, default=int(os.environ.get("MAX_TURNS", "10")), help="Maximum agent turns")
+    parser.add_argument("--seeds", default=SEEDS_DEFAULT, help="Path to seed JSONL file (default: sandbox/seed_tasks.jsonl)")
+    parser.add_argument("--limit", type=int, default=0, help="Limit number of tasks to run (0 = all)")
+    parser.add_argument("--model", default=os.environ.get("MODEL_NAME", ""), help="Agent model name (env MODEL_NAME default)")
+    parser.add_argument("--temperature", type=float, default=float(os.environ.get("MODEL_TEMPERATURE", "0.2")), help="Sampling temperature (env MODEL_TEMPERATURE default)")
+    parser.add_argument("--max-turns", dest="max_turns", type=int, default=int(os.environ.get("MAX_TURNS", "10")), help="Maximum agent turns (env MAX_TURNS default)")
     args = parser.parse_args(argv)
 
     if not os.environ.get("CHUTES_API_KEY"):
@@ -137,9 +119,8 @@ def main(argv: List[str]) -> int:
             outf.flush()
             print(f"{task.get('task_id','')} -> {res.get('tail','')} ({res.get('status','?')})")
 
-    # CSV summary
+    # CSV summary via shared helper
     try:
-        import csv
         rows = []
         with open(out_path, "r", encoding="utf-8") as inf:
             for line in inf:
@@ -147,32 +128,7 @@ def main(argv: List[str]) -> int:
                     rows.append(json.loads(line))
                 except json.JSONDecodeError:
                     pass
-        pass_count = sum(1 for r in rows if r.get("status") == "pass")
-        total = len(rows)
-        pass_rate = (pass_count / total) if total else 0.0
-        durations = [r.get("duration_s", 0.0) for r in rows if isinstance(r.get("duration_s"), (int, float))]
-
-        with open(csv_path, "w", newline="", encoding="utf-8") as cf:
-            w = csv.writer(cf)
-            w.writerow(["task_id", "status", "duration_s", "tail", "model", "temperature", "max_turns"])  # header
-            for r in rows:
-                w.writerow([
-                    r.get("task_id", ""),
-                    r.get("status", ""),
-                    r.get("duration_s", ""),
-                    r.get("tail", "").replace("\n", " ")[:200],
-                    r.get("model", ""),
-                    r.get("temperature", ""),
-                    r.get("max_turns", ""),
-                ])
-            w.writerow([])
-            w.writerow(["pass_rate", f"{pass_rate:.2f}"])
-            if durations:
-                import statistics as stats
-                p50 = stats.median(durations)
-                p95 = sorted(durations)[max(0, int(0.95 * (len(durations) - 1)))]
-                w.writerow(["p50_duration_s", f"{p50:.3f}"])
-                w.writerow(["p95_duration_s", f"{p95:.3f}"])
+        write_agent_csv(rows, csv_path)
         print(f"Wrote results: {out_path}\nWrote CSV: {csv_path}")
     except Exception as e:
         print(f"(CSV summary failed): {e}")

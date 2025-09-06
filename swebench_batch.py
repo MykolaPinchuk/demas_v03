@@ -7,32 +7,14 @@ import subprocess
 from datetime import datetime
 from typing import List, Dict, Any
 
+from demas.core.io import load_seed_tasks
+from demas.core.summaries import write_baseline_csv
+
 
 ROOT = os.path.abspath(os.path.dirname(__file__))
 SANDBOX = os.path.join(ROOT, "sandbox")
 RUNS_DIR = os.path.join(SANDBOX, "runs")
 SEEDS_DEFAULT = os.path.join(SANDBOX, "seed_tasks.jsonl")
-
-
-def load_seed_tasks(path: str) -> List[Dict[str, Any]]:
-    tasks: List[Dict[str, Any]] = []
-    seen_ids = set()
-    with open(path, "r", encoding="utf-8") as f:
-        for line in f:
-            line = line.strip()
-            if not line:
-                continue
-            try:
-                rec = json.loads(line)
-            except json.JSONDecodeError:
-                continue
-            tid = rec.get("task_id")
-            if tid and tid in seen_ids:
-                continue
-            if tid:
-                seen_ids.add(tid)
-            tasks.append(rec)
-    return tasks
 
 
 def list_run_subdirs() -> List[str]:
@@ -76,8 +58,8 @@ def run_baseline_for_task(task: Dict[str, Any]) -> Dict[str, Any]:
 def main(argv: List[str]) -> int:
     import argparse
     parser = argparse.ArgumentParser(description="Batch runner for SWE seeds (baseline mode)")
-    parser.add_argument("--seeds", default=SEEDS_DEFAULT, help="Path to seed JSONL file")
-    parser.add_argument("--limit", type=int, default=0, help="Limit number of tasks (0 = all)")
+    parser.add_argument("--seeds", default=SEEDS_DEFAULT, help="Path to seed JSONL file (default: sandbox/seed_tasks.jsonl)")
+    parser.add_argument("--limit", type=int, default=0, help="Limit number of tasks to run (0 = all)")
     args = parser.parse_args(argv)
 
     tasks = load_seed_tasks(args.seeds)
@@ -98,41 +80,16 @@ def main(argv: List[str]) -> int:
             outf.flush()
             print(f"{task.get('task_id','')} -> {res.get('tail','')} ({res.get('status','?')})")
 
-    # Also write a CSV summary (task_id, status, duration_s, tail)
+    # CSV summary via shared helper
     try:
-        import csv  # stdlib
         rows = []
         with open(out_path, "r", encoding="utf-8") as inf:
             for line in inf:
                 try:
-                    r = json.loads(line)
+                    rows.append(json.loads(line))
                 except json.JSONDecodeError:
-                    continue
-                rows.append(r)
-        # Compute simple stats
-        durations = [r.get("duration_s", 0.0) for r in rows if isinstance(r.get("duration_s"), (int, float))]
-        pass_count = sum(1 for r in rows if r.get("status") == "pass")
-        total = len(rows)
-        pass_rate = (pass_count / total) if total else 0.0
-        # Write CSV
-        with open(csv_path, "w", newline="", encoding="utf-8") as cf:
-            w = csv.writer(cf)
-            w.writerow(["task_id", "status", "duration_s", "tail"])  # header
-            for r in rows:
-                w.writerow([
-                    r.get("task_id", ""),
-                    r.get("status", ""),
-                    r.get("duration_s", ""),
-                    r.get("tail", "").replace("\n", " ")[:200],
-                ])
-            w.writerow([])
-            w.writerow(["pass_rate", f"{pass_rate:.2f}"])
-            if durations:
-                import statistics as stats
-                p50 = stats.median(durations)
-                p95 = sorted(durations)[max(0, int(0.95 * (len(durations) - 1)))]
-                w.writerow(["p50_duration_s", f"{p50:.3f}"])
-                w.writerow(["p95_duration_s", f"{p95:.3f}"])
+                    pass
+        write_baseline_csv(rows, csv_path)
         print(f"Wrote CSV: {csv_path}")
     except Exception as e:
         print(f"(CSV summary failed): {e}")
