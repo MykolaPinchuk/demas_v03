@@ -64,3 +64,4 @@ Notes:
 | 20250905_031529 | Qwen/Qwen3-Coder-480B-A35B-Instruct-FP8 | 0.57 | 29.990 | 38.298 | 7-task suite, Qwen 480B FP8, post-refactor |
 | 20250906_010859 | moonshotai/Kimi-K2-Instruct-0905 | 0.57 | 25.596 | 31.745 | 7-task suite, Kimi-K2-0905 |
 | 20250906_170720 | moonshotai/Kimi-K2-Instruct-75k | 0.57 | 17.698 | 25.080 | validation sweep |
+| 20250906_201923 | moonshotai/Kimi-K2-Instruct-0905 | 1.00 | 16.747 | 13.225 | 2-task smoke, Kimi-K2-0905 |
