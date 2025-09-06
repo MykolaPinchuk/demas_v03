@@ -14,6 +14,7 @@ from autogen_agentchat.ui import Console
 
 from autogen_core.models import UserMessage
 from autogen_ext.models.openai import OpenAIChatCompletionClient
+from demas.core import config as _cfg
 from demas.core.docker_exec import run_docker_bash
 
 # ---------------- config ----------------
@@ -31,13 +32,13 @@ BASE_MODEL_INFO = {
     "json_output": False, "structured_output": False, "family": "unknown",
 }
 
-DOCKER_IMAGE   = os.environ.get("SWE_IMAGE", "swebench-lite:py3.10")
+DOCKER_IMAGE   = _cfg.DOCKER_IMAGE
 MAX_TURNS      = int(os.environ.get("MAX_TURNS", "10"))  # allow diagnostics, install, and one patch attempt
 
 # Per-stage timeouts (seconds), aligned with baseline runner
-TIMEOUT_CLONE  = int(os.environ.get("TIMEOUT_CLONE", "5"))
-TIMEOUT_INSTALL= int(os.environ.get("TIMEOUT_INSTALL", "20"))
-TIMEOUT_TEST   = int(os.environ.get("TIMEOUT_TEST", "5"))
+TIMEOUT_CLONE  = _cfg.TIMEOUT_CLONE
+TIMEOUT_INSTALL= _cfg.TIMEOUT_INSTALL
+TIMEOUT_TEST   = _cfg.TIMEOUT_TEST
 DEPS_DIR      = "/workspace/_deps"  # persisted on host via volume mount
 
 TARGET_REPO = os.environ.get("TARGET_REPO", "https://github.com/pytest-dev/pytest")
@@ -582,4 +583,5 @@ When you run tests (step 3 or after patch), paste ONLY the exact string returned
         pass
 
 if __name__ == "__main__":
+    # Kept as a runnable shim; module is also exposed under demas.swe.oneagent
     asyncio.run(main())

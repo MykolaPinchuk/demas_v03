@@ -1,2 +1,30 @@
+# Python
+**/__pycache__/**
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+
+# Test and tooling caches
+.pytest_cache/
+
+# Sandbox artifacts and large outputs
+sandbox/project/
+sandbox/runs/
+sandbox/batch_runs/
+sandbox/agent_batch_runs/
+sandbox/_deps/
+sandbox/patch.*
+sandbox/add_marker.diff
+
+# Logs
+*.log
+sandbox/**/logs/
+
+# Keep small task lists in version control
+!sandbox/seed_tasks.jsonl
+!sandbox/swe_tasks.jsonl
+!sandbox/swe_official.jsonl
+
 sandbox
 

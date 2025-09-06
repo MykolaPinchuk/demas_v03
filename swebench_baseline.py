@@ -22,15 +22,16 @@ import subprocess
 from datetime import datetime
 from typing import Optional, Tuple, Dict, Any
 from demas.core.docker_exec import run_docker_bash
+from demas.core import config as _cfg
 
 
-DOCKER_IMAGE = os.environ.get("SWE_IMAGE", "swebench-lite:py3.10")
-WORKDIR = os.path.abspath("sandbox")
+DOCKER_IMAGE = _cfg.DOCKER_IMAGE
+WORKDIR = _cfg.WORKDIR
 
 # Per-stage timeouts (seconds)
-TIMEOUT_CLONE = int(os.environ.get("TIMEOUT_CLONE", "5"))
-TIMEOUT_INSTALL = int(os.environ.get("TIMEOUT_INSTALL", "20"))
-TIMEOUT_TEST = int(os.environ.get("TIMEOUT_TEST", "5"))
+TIMEOUT_CLONE = _cfg.TIMEOUT_CLONE
+TIMEOUT_INSTALL = _cfg.TIMEOUT_INSTALL
+TIMEOUT_TEST = _cfg.TIMEOUT_TEST
 
 
 def run_in_container(cmd: str, *, timeout: Optional[int] = None) -> Tuple[int, str, str]:

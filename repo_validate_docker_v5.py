@@ -1,6 +1,8 @@
-# repo_validate_docker_v5.py
-# Clone -> editable install (+build backend) -> test deps -> ensure pytest -> run pytest (one container).
-import os, sys, shlex, subprocess
+"""Shim: this legacy helper moved to legacy/repo_validate_docker_v5.py.
+
+Prefer using swebench_baseline.py or swebench_run_one.py instead.
+"""
+from legacy.repo_validate_docker_v5 import *  # noqa: F401,F403
 
 DOCKER_IMAGE = os.environ.get("SWE_IMAGE", "swebench-lite:py3.10")
 WORKDIR = os.path.abspath("sandbox")

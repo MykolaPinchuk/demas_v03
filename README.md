@@ -7,13 +7,17 @@ Docs map:
 - Roadmap, constraints, and detailed next steps: `plan.md`
 
 ### Repo structure (key files)
-- Docker and runners
+- Docker and runners (root scripts = stable CLIs; internal logic under `demas/`)
   - `Dockerfile.swe`: Python 3.10 + git + preinstalled `pytest`, `numpy`, `pandas` for speed.
-  - `swebench_baseline.py`: run one repo (clone → install → pytest) with strict timeouts.
-  - `swebench_batch.py`: run multiple tasks and write JSONL + CSV summaries.
-  - `team_swebench_oneagent.py`: one‑agent runner with tools (clone/install/test/patch, diagnostics).
-  - `swebench_agent_batch.py`: run the agent across tasks and summarize.
   - `swebench_run_one.py`: run a single SWE‑style task (baseline or `--agent`).
+  - `swebench_baseline.py`: baseline execution (uses internal helpers).
+  - `swebench_batch.py`: run multiple tasks and write JSONL + CSV summaries (uses internal helpers).
+  - `swebench_agent_batch.py`: run the agent across tasks and summarize (uses internal helpers).
+  - `team_swebench_oneagent.py`: one‑agent runner (also exposed as `demas.swe.oneagent`).
+  - Internal package: `demas/` (shared helpers and modules)
+    - `demas/core/`: `config.py`, `docker_exec.py`, `io.py`, `summaries.py`
+    - `demas/adapters/`: `swebench.py` (SWE‑bench adapter)
+    - `demas/benchmarks/`: `append.py` (benchmarks row appender)
 - Tasks and outputs
   - `sandbox/seed_tasks.jsonl`: small “seed” repos for quick smoke tests.
   - `sandbox/swe_tasks.jsonl`: SWE‑style tasks (repo + commit + optional `-k`).
@@ -68,7 +72,7 @@ See also `plan.md` for how this schema is used across single and batch runs.
 
 ### Benchmarks
 - See `BENCHMARKS.md` for a growing log of model results across suites.
-- Append a new row from the latest agent batch CSV:
+- Append a new row from the latest agent batch CSV (shim script calls internal module):
 ```bash
 python append_benchmarks.py --csv sandbox/agent_batch_runs/<timestamp>/summary.csv --notes "short note"
 ```
