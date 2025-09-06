@@ -14,6 +14,7 @@ from autogen_agentchat.ui import Console
 
 from autogen_core.models import UserMessage
 from autogen_ext.models.openai import OpenAIChatCompletionClient
+from demas.core.docker_exec import run_docker_bash
 
 # ---------------- config ----------------
 CHUTES_API_KEY  = os.environ.get("CHUTES_API_KEY")
@@ -112,11 +113,7 @@ def ensure_docker_image() -> None:
         pass
 
 def _docker(cmd: str) -> tuple[int, str, str]:
-    workdir = os.path.abspath("sandbox")
-    os.makedirs(workdir, exist_ok=True)
-    full = f"docker run --rm -v {workdir}:/workspace -w /workspace {DOCKER_IMAGE} bash -lc {shlex.quote(cmd)}"
-    p = subprocess.run(full, shell=True, text=True, capture_output=True)
-    return p.returncode, p.stdout, p.stderr
+    return run_docker_bash(cmd, image=DOCKER_IMAGE, workdir="sandbox")
 
 # -------- logging helpers --------
 def _ensure_log_dir() -> None:

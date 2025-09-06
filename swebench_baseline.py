@@ -21,6 +21,7 @@ import base64
 import subprocess
 from datetime import datetime
 from typing import Optional, Tuple, Dict, Any
+from demas.core.docker_exec import run_docker_bash
 
 
 DOCKER_IMAGE = os.environ.get("SWE_IMAGE", "swebench-lite:py3.10")
@@ -33,19 +34,7 @@ TIMEOUT_TEST = int(os.environ.get("TIMEOUT_TEST", "5"))
 
 
 def run_in_container(cmd: str, *, timeout: Optional[int] = None) -> Tuple[int, str, str]:
-    os.makedirs(WORKDIR, exist_ok=True)
-    docker_cmd = f"docker run --rm -v {WORKDIR}:/workspace -w /workspace {DOCKER_IMAGE} bash -lc {shlex.quote(cmd)}"
-    try:
-        p = subprocess.run(
-            docker_cmd,
-            shell=True,
-            text=True,
-            capture_output=True,
-            timeout=timeout if timeout and timeout > 0 else None,
-        )
-        return p.returncode, p.stdout, p.stderr
-    except subprocess.TimeoutExpired as e:
-        return 124, e.stdout or "", e.stderr or ""
+    return run_docker_bash(cmd, image=DOCKER_IMAGE, workdir=WORKDIR, timeout=timeout)
 
 
 def nonempty_tail(text: str) -> str:
