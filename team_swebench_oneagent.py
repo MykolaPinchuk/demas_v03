@@ -237,6 +237,14 @@ async def swe_pytest_auto(*, pytest_args: str = "-q") -> str:
     combined = (out or "") + ("\n" + err if err else "")
     last = [ln for ln in (out or "").splitlines() if ln.strip()]
     tail = last[-1] if last else ""
+    # Prefer a pytest summary line containing ' passed' if present, so the
+    # termination condition can trigger reliably even when -q prints progress
+    # lines like '...... [100%]' as the last line.
+    if (" passed" not in tail) and combined:
+        for _ln in reversed([ln.strip() for ln in combined.splitlines() if ln.strip()]):
+            if (" passed" in _ln) and (" failed" not in _ln) and (" error" not in _ln):
+                tail = _ln
+                break
 
     # Detect ModuleNotFoundError
     missing = None
@@ -301,7 +309,18 @@ async def swe_pytest_auto(*, pytest_args: str = "-q") -> str:
         })
         return res
 
-    # No missing module detected; return original tail
+    # No missing module detected; if tests succeeded but we didn't capture a pytest
+    # summary line, run a quick summary-only pass to get a proper tail that contains
+    # " passed" so termination can trigger reliably.
+    if code == 0 and ((" passed" not in tail) or not tail.strip()):
+        code_s, out_s, err_s = _docker(
+            f"export PYTHONPATH=/workspace/project:/workspace/project/src:{DEPS_DIR}:$PYTHONPATH; "
+            f"cd project && timeout {TIMEOUT_TEST}s python -m pytest -q | tail -n 1"
+        )
+        last_s = [ln for ln in (out_s or "").splitlines() if ln.strip()]
+        if last_s:
+            tail = last_s[-1]
+    # No missing module detected; return final tail
     res = tail or "(no stdout)"
     _log_record({
         "timestamp": _now_iso(), "role": "tool", "content": "", "tool_name": "swe_pytest_auto",
