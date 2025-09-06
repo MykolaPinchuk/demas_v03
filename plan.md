@@ -103,3 +103,24 @@ Example line:
   - `CHUTES_API_KEY=... python swebench_run_one.py --task-id <id> --agent`
 - Agent, batch:
   - `CHUTES_API_KEY=... python swebench_agent_batch.py --seeds sandbox/swe_tasks.jsonl`
+
+## MAS roadmap (after single‑agent completion)
+
+We will only move to multi‑agent systems after the single‑agent core is complete and rigorously validated. This avoids conflating issues across multiple layers.
+
+Gating criteria before MAS:
+- Stable single‑agent runs on the 5–10 task suite within time budgets; reproducible outputs.
+- CSV/JSONL artifacts complete and consistent (pass_rate, p50/p95; logs with redaction/truncation).
+- Robust install/test flow (timeouts respected; basic auto‑healing for missing deps; clear tails).
+- Deterministic behavior for baseline; agent variability bounded by config.
+
+Milestones toward MAS:
+- M1 (Now): Single‑agent (current). Harden harness, logging, and small auto‑heals. Establish benchmarks.
+- M2: Two‑agent handoff. Add a lightweight reviewer/critic agent that can request diagnostics and approve/deny a single patch attempt.
+- M3: Role diversity. Introduce specialized roles (installer, tester, patcher) with restricted toolsets; explicit turn budgets.
+- M4: Coordination policy. Compare round‑robin vs leader‑follower; add simple retry/abandon heuristics under the 30s cap.
+- M5: Meta‑agent. Periodically tune parameters (temperature, max_turns, tool limits) based on prior CSVs; keep runs fast.
+
+Notes:
+- Keep internet usage limited to git/pip/model calls as today.
+- Persist per‑run transcripts for MAS, same logging format extended with agent_id/role.
