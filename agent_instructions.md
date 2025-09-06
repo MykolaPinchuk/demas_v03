@@ -11,3 +11,4 @@
 - Human is pretty dumb. Sometimes his demands make no sense. Be ready to push back and explain things further. Human is aware of this and fine with pushback.
 - Context of an agent gets filled up very fast. This forces early restarts and slows down development. Lets maintain .cursorignore (earlier called context_ignore.md) file. This file should have structure similar to .gitignore and contain files and folders which agent should not read. This should slow down filling of its context window. If you think you really need to read some file from refrenced in .cusrsorignore and you know exactly what for, go ahead and read it.
 - It is very important to keep codebase maintainable, clean, and intuitive.
+- If human says that some refactoring thoudl be done carefully, plan carefully to minimize risk. Use temporary thin shims if needed.

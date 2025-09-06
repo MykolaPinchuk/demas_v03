@@ -120,7 +120,7 @@ def main(argv: list[str]) -> int:
     try:
         task = load_task(args.tasks, args.task_id)
     except SystemExit:
-        from swebench_adapter import load_official_tasks
+        from demas.adapters.swebench import load_official_tasks
         alt = load_official_tasks(args.swe_input)
         found = [t for t in alt if t.get("task_id") == args.task_id]
         if not found:
