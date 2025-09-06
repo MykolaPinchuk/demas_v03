@@ -9,3 +9,4 @@
 - Keep .gitignore up to date. Except for that, do not touch git. Human will handle git workflow.
 - Be honest. If unsure, say unsure. No bullshitting.
 - Human is pretty dumb. Sometimes his demands make no sense. Be ready to push back and explain things further. Human is aware of this and fine with pushback.
+- Context of an agent gets filled up very fast. This forces early restarts and slows down development. Lets maintain context_ignore.md file. This file should have structure similar to .gitignore and contain files and folders which agent should not read. This should slow down filling of its context window.
