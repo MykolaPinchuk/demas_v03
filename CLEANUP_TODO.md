@@ -1,4 +1,4 @@
-## Cleanup / Refactor Checklist (next iteration)
+## Cleanup / Refactor Checklist (next iteration, may be obsolete now)
 
 - Agent logging
   - Unify log field names and ensure consistent presence (role, content, tool_name, tool_args, tool_result, usage).
