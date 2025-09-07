@@ -86,3 +86,5 @@ Notes:
 | 20250907_202121 | openai/gpt-oss-120b | 0.00 | 13.327 | 13.687 | full 7-task sweep, temp=0 |
 | 20250907_202252 | openai/gpt-oss-20b | 0.00 | 9.900 | 14.364 | full 7-task sweep, temp=0 |
 | 20250907_202410 | Qwen/Qwen3-Coder-480B-A35B-Instruct-FP8 | 0.86 | 46.330 | 60.000 | full 7-task sweep, temp=0 |
+| 20250907_202938 | Qwen/Qwen3-Coder-30B-A3B-Instruct | 0.71 | 23.524 | 33.578 | full 7-task sweep, temp=0 |
+| 20250907_203247 | zai-org/GLM-4.5-FP8 | 0.86 | 24.169 | 27.281 | full 7-task sweep, temp=0 |
