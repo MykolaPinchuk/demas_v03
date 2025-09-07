@@ -85,3 +85,4 @@ Notes:
 | 20250907_201853 | deepseek-ai/DeepSeek-V3-0324 | 0.00 | 21.610 | 25.435 | full 7-task sweep, temp=0 |
 | 20250907_202121 | openai/gpt-oss-120b | 0.00 | 13.327 | 13.687 | full 7-task sweep, temp=0 |
 | 20250907_202252 | openai/gpt-oss-20b | 0.00 | 9.900 | 14.364 | full 7-task sweep, temp=0 |
+| 20250907_202410 | Qwen/Qwen3-Coder-480B-A35B-Instruct-FP8 | 0.86 | 46.330 | 60.000 | full 7-task sweep, temp=0 |

@@ -62,31 +62,20 @@ Validation
 ## Status (completed)
 - Phase 0 complete: shared IO/summaries; batch scripts refactored; parity validated.
 - Phase 1 complete: shared docker exec + config wired into runners; parity validated.
-- Phase 2 mostly complete: adapter/benchmarks moved under `demas/`; README updated; `.gitignore` updated.
-- Cleanup: removed legacy `repo_validate_docker_v5.py`, removed `append_benchmarks.py` shim, removed `swebench_adapter.py` shim.
+- Phase 2 complete: adapter/benchmarks moved under `demas/`; README updated; `.gitignore` updated.
+- One‑agent migration complete: implementation in `demas/swe/oneagent.py`; root shim removed; callers invoke `python -m demas.swe.oneagent`.
+- Baseline runner moved to `demas/swe/baseline.py`; root `swebench_baseline.py` removed; callers invoke `python -m demas.swe.baseline`.
+- Batch runners unified: `swebench_batch.py` supports `--agent`; root `swebench_agent_batch.py` removed.
+- Credentials auto‑loading added (env files at `~/.config/demas/credentials.env`, `.env.local`, or `demas/credentials.txt`).
+- Benchmarks tooling enhanced: `demas.benchmarks.append` CLI; `demas.benchmarks.sweep` for tracked model sweeps; `BENCHMARKS.md` split into leaderboard (full suites only) and full run log.
+- Final validation: single/batch (baseline + agent) pass; outputs and CSVs consistent.
 
-## Next agents: implementation checklist
-Goal: finish hiding complexity at root while keeping UX intact.
+## Next agents
+No further refactoring actions required. Core goals achieved: minimal root CLIs, internalized logic, unified batch runner, updated docs.
 
-1) One-agent module migration
-   - Move the implementation from `team_swebench_oneagent.py` into `demas/swe/oneagent.py`.
-   - Ensure `python -m demas.swe.oneagent` runs standalone (no root imports).
-   - Update `swebench_run_one.py` and `swebench_agent_batch.py` to continue invoking `python -m demas.swe.oneagent` (already done).
-   - Validate: run single agent task and a small agent batch; verify outputs unchanged.
-   - Remove `team_swebench_oneagent.py` from repo root once validated.
-
-2) Documentation refresh
-   - README: confirm examples reference module path for one-agent where appropriate.
-   - Keep only the following CLIs at root: `swebench_run_one.py`, `swebench_batch.py`, `swebench_agent_batch.py`.
-   - Verify all references to removed shims are gone.
-
-3) Guards and ignore config
-   - Confirm `.gitignore` excludes sandbox outputs and caches; keep task JSONLs tracked.
-   - Confirm `context_ignore.md` remains aligned to avoid context bloat.
-
-4) Final validation
-   - Baseline batch (limit 2) and agent batch (limit 2) passing, artifacts identical in shape.
-   - Optional: append benchmark row via `python -m demas.benchmarks.append`.
+Optional future improvements (non‑blocking):
+- Add config flag for tracked model sets/suites in `demas/core/models.py`.
+- Extend sweep to export consolidated markdown/plots.
 
 ## Known hiccups and editing tips (for next agents)
 - Large single-shot edits to `team_swebench_oneagent.py` and `demas/swe/oneagent.py` caused diff timeouts. Prefer incremental moves:
