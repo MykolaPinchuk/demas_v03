@@ -34,6 +34,16 @@ Then open the newest `sandbox/agent_batch_runs/<ts>/summary.csv` and record:
 <!-- MAIN_TABLE_START -->
 | timestamp           | model                                      | pass_rate | p50_duration_s | p95_duration_s | notes |
 |---------------------|--------------------------------------------|-----------|----------------|----------------|-------|
+| 20250907_200654     | moonshotai/Kimi-K2-Instruct-0905           | 0.57      | 32.338         | 47.708         | full 7-task sweep, temp=0 |
+| 20250907_201036     | moonshotai/Kimi-K2-Instruct-75k            | 0.57      | 32.363         | 42.521         | full 7-task sweep, temp=0 |
+| 20250907_201416     | moonshotai/Kimi-Dev-72B                    | 0.00      | 3.280          | 3.393          | full 7-task sweep, temp=0 |
+| 20250907_201438     | deepseek-ai/DeepSeek-V3.1                  | 0.57      | 34.737         | 47.735         | full 7-task sweep, temp=0 |
+| 20250907_201853     | deepseek-ai/DeepSeek-V3-0324               | 0.00      | 21.610         | 25.435         | full 7-task sweep, temp=0 |
+| 20250907_202121     | openai/gpt-oss-120b                        | 0.00      | 13.327         | 13.687         | full 7-task sweep, temp=0 |
+| 20250907_202252     | openai/gpt-oss-20b                         | 0.00      | 9.900          | 14.364         | full 7-task sweep, temp=0 |
+| 20250907_202410     | Qwen/Qwen3-Coder-480B-A35B-Instruct-FP8    | 0.86      | 46.330         | 60.000         | full 7-task sweep, temp=0 |
+| 20250907_202938     | Qwen/Qwen3-Coder-30B-A3B-Instruct          | 0.71      | 23.524         | 33.578         | full 7-task sweep, temp=0 |
+| 20250907_203247     | zai-org/GLM-4.5-FP8                        | 0.86      | 24.169         | 27.281         | full 7-task sweep, temp=0 |
 <!-- MAIN_TABLE_END -->
 
 ### Run log (all runs)
