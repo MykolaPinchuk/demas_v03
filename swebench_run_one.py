@@ -22,7 +22,7 @@ def load_task(tasks_path: str, task_id: str) -> Dict[str, Any]:
 
 
 def run_baseline(task: Dict[str, Any]) -> int:
-    args = [sys.executable, os.path.join(ROOT, "swebench_baseline.py"), "--repo", task["repo"], "--task-id", task["task_id"]]
+    args = [sys.executable, "-m", "demas.swe.baseline", "--repo", task["repo"], "--task-id", task["task_id"]]
     if task.get("ref"):
         args += ["--ref", task["ref"]]
     if task.get("pytest_k"):

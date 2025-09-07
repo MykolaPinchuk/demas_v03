@@ -12,7 +12,7 @@ Docs map:
   - `swebench_run_one.py`: run a single SWE‑style task (baseline or `--agent`).
   - `swebench_baseline.py`: baseline execution (uses internal helpers).
   - `swebench_batch.py`: run multiple tasks and write JSONL + CSV summaries (uses internal helpers).
-  - `swebench_agent_batch.py`: run the agent across tasks and summarize (uses internal helpers).
+  - `swebench_batch.py`: supports baseline and `--agent` to run the agent across tasks and summarize.
   - `demas/swe/oneagent.py`: one‑agent runner (invoked via `python -m demas.swe.oneagent`).
   - Internal package: `demas/` (shared helpers and modules)
     - `demas/core/`: `config.py`, `docker_exec.py`, `io.py`, `summaries.py`
@@ -53,10 +53,10 @@ CHUTES_API_KEY=YOUR_KEY python swebench_run_one.py --task-id swe_demo_numpy_fina
 ```
 Batch:
 ```bash
-CHUTES_API_KEY=YOUR_KEY python swebench_agent_batch.py --seeds sandbox/swe_tasks.jsonl
+CHUTES_API_KEY=YOUR_KEY python swebench_batch.py --seeds sandbox/swe_tasks.jsonl --agent
 ```
 Agent batch outputs:
-- `sandbox/agent_batch_runs/<timestamp>/{results.jsonl, summary.csv}`
+- `sandbox/agent_batch_runs/<timestamp>/{results.jsonl, summary.csv}` (when using `--agent`)
 
 ### Task format
 Local JSONL schema used by both baseline and agent:
