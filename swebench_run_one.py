@@ -5,6 +5,7 @@ import json
 import base64
 import subprocess
 from typing import Dict, Any, Optional
+from demas.core import config as _cfg  # triggers local credentials loading
 
 ROOT = os.path.abspath(os.path.dirname(__file__))
 

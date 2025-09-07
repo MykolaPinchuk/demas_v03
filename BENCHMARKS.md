@@ -66,3 +66,5 @@ Notes:
 | 20250906_170720 | moonshotai/Kimi-K2-Instruct-75k | 0.57 | 17.698 | 25.080 | validation sweep |
 | 20250906_201923 | moonshotai/Kimi-K2-Instruct-0905 | 1.00 | 16.747 | 13.225 | 2-task smoke, Kimi-K2-0905 |
 | 20250906_204513 | moonshotai/Kimi-K2-Instruct-0905 | 1.00 | 18.379 | 15.473 | post-move shim test |
+| 20250907_194335 | moonshotai/Kimi-K2-Instruct-75k | 1.00 | 18.624 | 13.701 | validation sweep |
+| 20250907_195415 | moonshotai/Kimi-K2-Instruct-75k | 1.00 | 21.113 | 21.113 |  |

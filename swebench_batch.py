@@ -9,6 +9,7 @@ from typing import List, Dict, Any
 
 from demas.core.io import load_seed_tasks
 from demas.core.summaries import write_baseline_csv, write_agent_csv
+from demas.core import config as _cfg  # triggers local credentials loading
 
 
 ROOT = os.path.abspath(os.path.dirname(__file__))

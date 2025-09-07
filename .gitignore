@@ -21,6 +21,7 @@ sandbox/add_marker.diff
 # Logs
 *.log
 sandbox/**/logs/
+demas/credentials.txt
 
 # Keep small task lists in version control
 !sandbox/seed_tasks.jsonl

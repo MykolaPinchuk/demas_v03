@@ -27,6 +27,8 @@ Docs map:
 - Docker installed and able to run Linux containers.
 - Python 3.10+ on host: `pip install -r requirements.txt` (for the agent scripts).
 - Chutes API key for agent mode: set `CHUTES_API_KEY`.
+  - Optional: place secrets in `~/.config/demas/credentials.env` or repo-local `.env.local`:
+    - Lines: `KEY=VALUE` (e.g., `CHUTES_API_KEY=...`). Comments `#` and blanks are ignored. Existing env vars are not overridden.
 
 ### Build the Docker image
 ```bash
@@ -75,6 +77,14 @@ See also `plan.md` for how this schema is used across single and batch runs.
 - Append a new row from the latest agent batch CSV (shim script calls internal module):
 ```bash
 python -m demas.benchmarks.append --csv sandbox/agent_batch_runs/<timestamp>/summary.csv --notes "short note"
+```
+- Run a full sweep of all tracked models (appends rows to `BENCHMARKS.md`):
+```bash
+CHUTES_API_KEY=YOUR_KEY \
+python -m demas.benchmarks.sweep \
+  --seeds sandbox/swe_tasks.jsonl \
+  --limit 0 \
+  --notes "full sweep"
 ```
 
 ### Next steps
