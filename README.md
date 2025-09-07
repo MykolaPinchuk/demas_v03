@@ -10,8 +10,7 @@ Docs map:
 - Docker and runners (root scripts = stable CLIs; internal logic under `demas/`)
   - `Dockerfile.swe`: Python 3.10 + git + preinstalled `pytest`, `numpy`, `pandas` for speed.
   - `swebench_run_one.py`: run a single SWE‑style task (baseline or `--agent`).
-  - `swebench_baseline.py`: baseline execution (uses internal helpers).
-  - `swebench_batch.py`: run multiple tasks and write JSONL + CSV summaries (uses internal helpers).
+  - `demas/swe/baseline.py`: baseline module runner (invoked via `python -m demas.swe.baseline`).
   - `swebench_batch.py`: supports baseline and `--agent` to run the agent across tasks and summarize.
   - `demas/swe/oneagent.py`: one‑agent runner (invoked via `python -m demas.swe.oneagent`).
   - Internal package: `demas/` (shared helpers and modules)
@@ -27,7 +26,7 @@ Docs map:
 - Docker installed and able to run Linux containers.
 - Python 3.10+ on host: `pip install -r requirements.txt` (for the agent scripts).
 - Chutes API key for agent mode: set `CHUTES_API_KEY`.
-  - Optional: place secrets in `~/.config/demas/credentials.env` or repo-local `.env.local`:
+  - Optional: place secrets in `~/.config/demas/credentials.env`, repo-local `.env.local`, or `demas/credentials.txt`:
     - Lines: `KEY=VALUE` (e.g., `CHUTES_API_KEY=...`). Comments `#` and blanks are ignored. Existing env vars are not overridden.
 
 ### Build the Docker image
@@ -78,13 +77,13 @@ See also `plan.md` for how this schema is used across single and batch runs.
 ```bash
 python -m demas.benchmarks.append --csv sandbox/agent_batch_runs/<timestamp>/summary.csv --notes "short note"
 ```
-- Run a full sweep of all tracked models (appends rows to `BENCHMARKS.md`):
+- Run a full sweep of all tracked models (appends rows to `BENCHMARKS.md`). Include the word `full` in notes to add to the leaderboard; all runs are also logged below:
 ```bash
-CHUTES_API_KEY=YOUR_KEY \
 python -m demas.benchmarks.sweep \
   --seeds sandbox/swe_tasks.jsonl \
   --limit 0 \
-  --notes "full sweep"
+  --temperature 0 \
+  --notes "full 7-task sweep, temp=0"
 ```
 
 ### Next steps

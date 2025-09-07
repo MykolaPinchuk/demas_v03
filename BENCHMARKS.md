@@ -28,9 +28,18 @@ Then open the newest `sandbox/agent_batch_runs/<ts>/summary.csv` and record:
 - p95_duration_s
 - notes (if errors/instability)
 
-### Results (latest entries)
+### Leaderboard (full suite only)
 - Columns: `timestamp`, `model`, `pass_rate`, `p50_duration_s`, `p95_duration_s`, `notes`
 
+<!-- MAIN_TABLE_START -->
+| timestamp           | model                                      | pass_rate | p50_duration_s | p95_duration_s | notes |
+|---------------------|--------------------------------------------|-----------|----------------|----------------|-------|
+<!-- MAIN_TABLE_END -->
+
+### Run log (all runs)
+- Columns: `timestamp`, `model`, `pass_rate`, `p50_duration_s`, `p95_duration_s`, `notes`
+
+<!-- LOG_TABLE_START -->
 | timestamp           | model                                      | pass_rate | p50_duration_s | p95_duration_s | notes |
 |---------------------|--------------------------------------------|-----------|----------------|----------------|-------|
 | 20250905_022404     | deepseek-ai/DeepSeek-V3-0324               | 1.00      | 26.287         | 22.001         | stable |
@@ -44,6 +53,7 @@ Then open the newest `sandbox/agent_batch_runs/<ts>/summary.csv` and record:
 | 20250905_022331     | openai/gpt-oss-120b                        | 0.00      | 11.326         | 11.000         | both failed (API error) |
 | 20250905_022509     | openai/gpt-oss-20b                         | 0.00      | 13.338         | 12.630         | both failed (API error) |
 | 20250905_022117     | moonshotai/Kimi-Dev-72B                    | 0.00      | 3.450          | 3.138          | both failed (runtime error) |
+<!-- LOG_TABLE_END -->
 
 Notes:
 - Times vary slightly run-to-run; prefer the most recent timestamp per model for comparisons.
@@ -68,3 +78,10 @@ Notes:
 | 20250906_204513 | moonshotai/Kimi-K2-Instruct-0905 | 1.00 | 18.379 | 15.473 | post-move shim test |
 | 20250907_194335 | moonshotai/Kimi-K2-Instruct-75k | 1.00 | 18.624 | 13.701 | validation sweep |
 | 20250907_195415 | moonshotai/Kimi-K2-Instruct-75k | 1.00 | 21.113 | 21.113 |  |
+| 20250907_200654 | moonshotai/Kimi-K2-Instruct-0905 | 0.57 | 32.338 | 47.708 | full 7-task sweep, temp=0 |
+| 20250907_201036 | moonshotai/Kimi-K2-Instruct-75k | 0.57 | 32.363 | 42.521 | full 7-task sweep, temp=0 |
+| 20250907_201416 | moonshotai/Kimi-Dev-72B | 0.00 | 3.280 | 3.393 | full 7-task sweep, temp=0 |
+| 20250907_201438 | deepseek-ai/DeepSeek-V3.1 | 0.57 | 34.737 | 47.735 | full 7-task sweep, temp=0 |
+| 20250907_201853 | deepseek-ai/DeepSeek-V3-0324 | 0.00 | 21.610 | 25.435 | full 7-task sweep, temp=0 |
+| 20250907_202121 | openai/gpt-oss-120b | 0.00 | 13.327 | 13.687 | full 7-task sweep, temp=0 |
+| 20250907_202252 | openai/gpt-oss-20b | 0.00 | 9.900 | 14.364 | full 7-task sweep, temp=0 |

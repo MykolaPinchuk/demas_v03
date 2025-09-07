@@ -43,8 +43,20 @@ def derive_timestamp(csv_path: str) -> str:
 
 def append_row(md_path: str, ts: str, model: str, pass_rate: str, p50: str, p95: str, notes: str):
     line = f"| {ts} | {model} | {pass_rate or 'NA'} | {p50 or 'NA'} | {p95 or 'NA'} | {notes or ''} |\n"
-    with open(md_path, "a", encoding="utf-8") as f:
-        f.write(line)
+    with open(md_path, "r+", encoding="utf-8") as f:
+        content = f.read()
+        # Always append to the run log table
+        if "<!-- LOG_TABLE_END -->" in content:
+            content = content.replace("<!-- LOG_TABLE_END -->", line + "<!-- LOG_TABLE_END -->")
+        else:
+            content = content + "\n" + line
+        # Only add to leaderboard if this is a full suite (notes contains 'full' and limit not present)
+        is_full = "full" in (notes or "").lower()
+        if is_full and "<!-- MAIN_TABLE_END -->" in content:
+            content = content.replace("<!-- MAIN_TABLE_END -->", line + "<!-- MAIN_TABLE_END -->")
+        f.seek(0)
+        f.write(content)
+        f.truncate()
 
 
 def main(argv: list[str]) -> int:

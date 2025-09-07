@@ -96,7 +96,7 @@ def main(argv: List[str]) -> int:
     ap.add_argument("--seeds", default="sandbox/swe_tasks.jsonl", help="Seed tasks JSONL (default: sandbox/swe_tasks.jsonl)")
     ap.add_argument("--limit", type=int, default=0, help="Limit number of tasks (0 = all)")
     ap.add_argument("--models", nargs="*", default=None, help="Override model list; default uses TRACKED_MODELS")
-    ap.add_argument("--notes", default="", help="Notes appended to BENCHMARKS.md rows")
+    ap.add_argument("--notes", default="", help="Notes appended to BENCHMARKS.md rows (include 'full' to mark leaderboard)")
     ap.add_argument("--temperature", type=float, default=DEFAULT_TEMPERATURE, help="Sampling temperature for all models (default from registry)")
     args = ap.parse_args(argv)
 

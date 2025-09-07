@@ -14,7 +14,7 @@ So it is refactoring/cleaning and not intitial development which required most c
 
 Do such refactoring only on a fresh cpntext window. MAybe I will need the best model for them as well.
 
-
+Add using venv into agent instructions. Or eveb better, add this to Cursor memories.
 
 
 
