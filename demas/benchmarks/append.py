@@ -47,3 +47,22 @@ def append_row(md_path: str, ts: str, model: str, pass_rate: str, p50: str, p95:
         f.write(line)
 
 
+def main(argv: list[str]) -> int:
+    import argparse
+    p = argparse.ArgumentParser(description="Append a benchmark summary row to BENCHMARKS.md")
+    p.add_argument("--csv", required=True, help="Path to agent batch summary.csv")
+    p.add_argument("--notes", default="", help="Short notes to include in the row")
+    p.add_argument("--md", default="BENCHMARKS.md", help="Markdown file to append to (default: BENCHMARKS.md)")
+    args = p.parse_args(argv)
+
+    info = parse_csv(args.csv)
+    ts = derive_timestamp(args.csv)
+    append_row(args.md, ts, info.get("model", ""), info.get("pass_rate", ""), info.get("p50", ""), info.get("p95", ""), args.notes)
+    print(f"Appended row for {ts} -> {args.md}")
+    return 0
+
+
+if __name__ == "__main__":
+    import sys
+    sys.exit(main(sys.argv[1:]))
+

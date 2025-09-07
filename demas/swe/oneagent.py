@@ -102,8 +102,8 @@ def ensure_docker_image() -> None:
     try:
         p = subprocess.run(["docker", "image", "inspect", DOCKER_IMAGE], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         if p.returncode != 0:
-            # Attempt to build from Dockerfile.swe in repo root
-            repo_root = os.path.abspath(os.path.dirname(__file__))
+            # Build from repository root where Dockerfile.swe resides
+            repo_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", ".."))
             df = os.path.join(repo_root, "Dockerfile.swe")
             if not os.path.isfile(df):
                 print(f"[warn] Dockerfile.swe not found at {df}; cannot auto-build image {DOCKER_IMAGE}")

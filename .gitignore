@@ -9,6 +9,7 @@
 .pytest_cache/
 
 # Sandbox artifacts and large outputs
+sandbox/
 sandbox/project/
 sandbox/runs/
 sandbox/batch_runs/
@@ -25,6 +26,4 @@ sandbox/**/logs/
 !sandbox/seed_tasks.jsonl
 !sandbox/swe_tasks.jsonl
 !sandbox/swe_official.jsonl
-
-sandbox
 

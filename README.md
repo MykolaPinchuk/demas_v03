@@ -13,7 +13,7 @@ Docs map:
   - `swebench_baseline.py`: baseline execution (uses internal helpers).
   - `swebench_batch.py`: run multiple tasks and write JSONL + CSV summaries (uses internal helpers).
   - `swebench_agent_batch.py`: run the agent across tasks and summarize (uses internal helpers).
-  - `team_swebench_oneagent.py`: one‑agent runner (also exposed as `demas.swe.oneagent`).
+  - `demas/swe/oneagent.py`: one‑agent runner (invoked via `python -m demas.swe.oneagent`).
   - Internal package: `demas/` (shared helpers and modules)
     - `demas/core/`: `config.py`, `docker_exec.py`, `io.py`, `summaries.py`
     - `demas/adapters/`: `swebench.py` (SWE‑bench adapter)
