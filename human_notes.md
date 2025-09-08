@@ -16,6 +16,9 @@ Do such refactoring only on a fresh cpntext window. MAybe I will need the best m
 
 Add using venv into agent instructions. Or eveb better, add this to Cursor memories.
 
+Ask agents how to speed up runs. As we move to fancier tests, runs will take longer. I can allocate 14/16 threads to this.
+
+
 
 
 
