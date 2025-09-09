@@ -15,8 +15,8 @@ This file is a knowledge transfer from old agents to new coding agents which wil
   - Baseline: `python swebench_run_one.py --task-id <id>`
   - Agent: `python swebench_run_one.py --task-id <id> --agent`
 - Batch runner (unified): `swebench_batch.py`
-  - Baseline: `python swebench_batch.py --seeds sandbox/swe_tasks.jsonl`
-  - Agent: `python swebench_batch.py --seeds sandbox/swe_tasks.jsonl --agent`
+  - Baseline: `python swebench_batch.py --seeds sandbox/swe_tasks.jsonl [--jobs N]`
+  - Agent: `python swebench_batch.py --seeds sandbox/swe_tasks.jsonl --agent [--jobs N]`
 - Module CLIs (internals):
   - Baseline: `python -m demas.swe.baseline`
   - Agent: `python -m demas.swe.oneagent`
@@ -38,17 +38,19 @@ This file is a knowledge transfer from old agents to new coding agents which wil
 
 ### Benchmarks and Leaderboard
 - Tracked models: `demas/core/models.py` (`TRACKED_MODELS`).
-- Full sweep (all tracked models, 7 tasks, temp=0; appends to BENCHMARKS.md):
+- Full sweep (all tracked models, parallel tasks, auto-append results, auto-normalize best per model when notes contain "full"):
 ```bash
-python -m demas.benchmarks.sweep \
+CHUTES_API_KEY=YOUR_KEY python -m demas.benchmarks.sweep \
   --seeds sandbox/swe_tasks.jsonl \
   --limit 0 \
+  --jobs 12 \
   --temperature 0 \
-  --notes "full 7-task sweep, temp=0"
+  --notes "full 7-task sweep, jobs=12, temp=0"
 ```
-- BENCHMARKS.md:
-  - Leaderboard (top table) shows only runs whose notes contain the word `full`.
-  - All runs are appended to the Run Log section.
+- After a sweep (or anytime) you can normalize the leaderboard explicitly:
+```bash
+python -m demas.benchmarks.append --normalize
+```
 
 ### Adapter fallback (single run)
 - If `--task-id` is not found in `--tasks`/seeds, `swebench_run_one.py` falls back to `sandbox/swe_official.jsonl` via the SWE adapter.
@@ -77,5 +79,15 @@ python swebench_batch.py --seeds sandbox/swe_tasks.jsonl --agent --limit 0 --ben
 ### Guardrails
 - Sandbox outputs and caches are `.gitignore`d; small JSONL task files are kept.
 - `.cursorignore` reduces context bloat for agents.
+
+### Profiling
+- Agent run profiling (per-tool durations) to CSV:
+```bash
+python -m demas.benchmarks.profile --agent-run-dir sandbox/agent_batch_runs/<timestamp>
+```
+- Baseline run profiling (per-stage durations) to CSV:
+```bash
+python -m demas.benchmarks.profile --baseline-run-dir sandbox/batch_runs/<timestamp>
+```
 
 
