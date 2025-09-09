@@ -1,0 +1,52 @@
+# Speedup Plan (ranked, low-risk first)
+
+1) Parallelize across tasks (one container per task)
+- Impact: High (near-linear speedup up to ~CPU cores)
+- Effort/Risk: Low; orchestration only, per-task logic unchanged
+- Validation: Run 12 concurrent single-task runs vs sequential; compare wall time
+- Notes: Cap at ~12–14 on 16-thread box; keep per-task attempts sequential
+
+2) Reuse pip cache between runs
+- Impact: High on repeated repos/deps
+- Effort/Risk: Low; mount host cache (~/.cache/pip) into container
+- Validation: First run slower; subsequent runs show cache hits and reduced install time
+
+3) Heavier base image variant (tools + common build deps preinstalled)
+- Impact: Medium–High; reduces per-run build/install variance
+- Effort/Risk: Low; add a second Dockerfile tag and switch by flag
+- Validation: Compare cold-start of heavy repos on slim vs heavy image
+
+4) “Triage then full” test strategy (flag)
+- Impact: Medium; big savings on failing attempts
+- Effort/Risk: Low; adjust test invocation order only
+- Validation: On a failing repo, measure attempt time with and without triage (-q -x first)
+
+5) Pytest xdist available (opt-in per-repo)
+- Impact: Medium on large suites; none on tiny suites
+- Effort/Risk: Low; preinstall pytest-xdist, but default off for safety
+- Validation: Enable -n auto on one heavy repo and confirm speedup; keep default off globally
+
+6) Size-aware scheduling (longest-first)
+- Impact: Medium; better CPU utilization, lower tail latency
+- Effort/Risk: Low; simple heuristic ordering of tasks
+- Validation: Compare makespan random vs longest-first on 7-task set
+
+7) Local git mirrors / cached shallow clones
+- Impact: Medium on network-bound clones
+- Effort/Risk: Low–Medium; small cache layer, careful invalidation per ref
+- Validation: Measure clone time before/after; expect near-instant local copies
+
+8) Persist per-repo site-packages/venv (volume)
+- Impact: Medium; avoids repeated installs when sources unchanged
+- Effort/Risk: Medium; must invalidate on pyproject/lock changes
+- Validation: Toggle a repo with no dep changes across runs; verify install step skipped or near-zero
+
+9) Faster installers (uv pip / no-build-isolation when safe)
+- Impact: Medium (case-dependent)
+- Effort/Risk: Medium; compatibility considerations
+- Validation: A/B install time on selected repos; revert if issues
+
+Operational recommendations
+- Default profile on 16 threads: 12 parallel tasks; mount pip cache; heavy image available; default single-proc tests; triage+full enabled by flag; xdist opt-in per-repo.
+- Resource controls: Consider --cpuset-cpus to reduce context switching; memory caps to avoid swap under high parallelism.
+
