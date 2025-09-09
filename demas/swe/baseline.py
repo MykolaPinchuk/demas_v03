@@ -88,6 +88,10 @@ def main(argv: list[str]) -> int:
 
     kflag = f'-k "{pytest_k_val}"' if pytest_k_val else ""
 
+    # Use a unique project directory per run to avoid collisions under parallel jobs
+    proj_dir = f"project_{int(time.time()*1000)}_{os.getpid()}"
+    proj_q = shlex.quote(proj_dir)
+
     # Optional patch embedding via base64 to avoid quoting issues
     patch_embed = ""
     patch_applied_flag = False
@@ -121,9 +125,9 @@ def main(argv: list[str]) -> int:
 
     bash_script = f"""
 set -e
-rm -rf project
-timeout {TIMEOUT_CLONE}s git clone --depth 1 {shlex.quote(repo)} project
-cd project
+rm -rf {proj_q}
+timeout {TIMEOUT_CLONE}s git clone --depth 1 {shlex.quote(repo)} {proj_q}
+cd {proj_q}
 if [ -n {shlex.quote(ref or '')} ]; then \
   timeout {TIMEOUT_CLONE}s git fetch --depth 1 origin {shlex.quote(ref)} && \
   git checkout -q {shlex.quote(ref)}; \
@@ -160,8 +164,8 @@ fi
 
     status = "pass" if (" passed" in tail and " failed" not in tail and " error" not in tail) else ("fail" if code != 0 else "ok")
 
-    # Prepare result directory
-    ts = datetime.utcnow().strftime("%Y%m%d_%H%M%S")
+    # Prepare result directory (allow caller to override for parallel safety)
+    ts = os.environ.get("RUN_TS") or datetime.utcnow().strftime("%Y%m%d_%H%M%S")
     run_dir = os.path.join(WORKDIR, "runs", ts)
     os.makedirs(run_dir, exist_ok=True)
 

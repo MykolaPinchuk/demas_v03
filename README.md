@@ -11,7 +11,7 @@ Docs map:
   - `Dockerfile.swe`: Python 3.10 + git + preinstalled `pytest`, `numpy`, `pandas` for speed.
   - `swebench_run_one.py`: run a single SWE‑style task (baseline or `--agent`).
   - `demas/swe/baseline.py`: baseline module runner (invoked via `python -m demas.swe.baseline`).
-  - `swebench_batch.py`: supports baseline and `--agent` to run the agent across tasks and summarize.
+  - `swebench_batch.py`: supports baseline and `--agent` to run the agent across tasks and summarize. Agent mode supports `--jobs N` for parallel tasks.
   - `demas/swe/oneagent.py`: one‑agent runner (invoked via `python -m demas.swe.oneagent`).
   - Internal package: `demas/` (shared helpers and modules)
     - `demas/core/`: `config.py`, `docker_exec.py`, `io.py`, `summaries.py`
@@ -62,6 +62,12 @@ If your key is stored in one of the auto-loaded files above, you can omit the in
 python swebench_run_one.py --task-id swe_demo_numpy_financial --agent
 python swebench_batch.py --seeds sandbox/swe_tasks.jsonl --agent
 ```
+Parallel agent batch (example with 12 workers):
+```bash
+CHUTES_API_KEY=YOUR_KEY python swebench_batch.py --seeds sandbox/swe_tasks.jsonl --agent --jobs 12
+```
+Notes:
+- `--jobs` applies to agent mode only. Baseline runs are sequential.
 Agent batch outputs:
 - `sandbox/agent_batch_runs/<timestamp>/{results.jsonl, summary.csv}` (when using `--agent`)
 

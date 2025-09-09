@@ -5,7 +5,9 @@ import json
 import time
 import subprocess
 from datetime import datetime
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Tuple
+from concurrent.futures import ThreadPoolExecutor, as_completed
+import threading
 
 from demas.core.io import load_seed_tasks
 from demas.core.summaries import write_baseline_csv, write_agent_csv
@@ -124,6 +126,17 @@ def run_agent_for_task(task: Dict[str, Any], *, out_dir: str, model: str, temper
     }
 
 
+def _run_single_task(task: Dict[str, Any], *, agent: bool, out_dir: str, model: str, temperature: float, max_turns: int) -> Tuple[Dict[str, Any], str]:
+    if agent:
+        res = run_agent_for_task(task, out_dir=out_dir, model=model, temperature=temperature, max_turns=max_turns)
+    else:
+        # Ensure unique timestamp per baseline task to avoid collisions
+        os.environ["RUN_TS"] = datetime.utcnow().strftime("%Y%m%d_%H%M%S_%f")
+        res = run_baseline_for_task(task)
+    msg = f"{task.get('task_id','')} -> {res.get('tail','')} ({res.get('status','?')})"
+    return res, msg
+
+
 def main(argv: List[str]) -> int:
     import argparse
     parser = argparse.ArgumentParser(description="Batch runner for SWE seeds (baseline or agent mode)")
@@ -133,6 +146,7 @@ def main(argv: List[str]) -> int:
     parser.add_argument("--model", default=os.environ.get("MODEL_NAME", ""), help="Agent model name (env MODEL_NAME default)")
     parser.add_argument("--temperature", type=float, default=float(os.environ.get("MODEL_TEMPERATURE", "0.2")), help="Sampling temperature (env MODEL_TEMPERATURE default)")
     parser.add_argument("--max-turns", dest="max_turns", type=int, default=int(os.environ.get("MAX_TURNS", "10")), help="Maximum agent turns (env MAX_TURNS default)")
+    parser.add_argument("--jobs", type=int, default=1, help="Parallel jobs (agent mode only). Default: 1")
     args = parser.parse_args(argv)
 
     tasks = load_seed_tasks(args.seeds)
@@ -154,15 +168,34 @@ def main(argv: List[str]) -> int:
     csv_path = os.path.join(out_dir, "summary.csv")
 
     t0 = time.time()
+    # Write results incrementally with a lock to support parallel workers
+    write_lock = threading.Lock()
     with open(out_path, "w", encoding="utf-8") as outf:
-        for task in tasks:
-            if args.agent:
-                res = run_agent_for_task(task, out_dir=out_dir, model=args.model, temperature=args.temperature, max_turns=args.max_turns)
-            else:
-                res = run_baseline_for_task(task)
-            outf.write(json.dumps(res) + "\n")
-            outf.flush()
-            print(f"{task.get('task_id','')} -> {res.get('tail','')} ({res.get('status','?')})")
+        if max(1, args.jobs) > 1:
+            # Parallel runs (agent or baseline)
+            workers = max(1, args.jobs)
+            with ThreadPoolExecutor(max_workers=workers) as ex:
+                future_to_task = {
+                    ex.submit(_run_single_task, task, agent=args.agent, out_dir=out_dir, model=args.model, temperature=args.temperature, max_turns=args.max_turns): task
+                    for task in tasks
+                }
+                for fut in as_completed(future_to_task):
+                    try:
+                        res, msg = fut.result()
+                    except Exception as e:
+                        res = {"task_id": future_to_task[fut].get("task_id", ""), "error": f"worker_failed: {e}"}
+                        msg = f"{res.get('task_id','')} -> (error) ({e})"
+                    with write_lock:
+                        outf.write(json.dumps(res) + "\n")
+                        outf.flush()
+                    print(msg)
+        else:
+            # Sequential (baseline or single-job agent)
+            for task in tasks:
+                res, msg = _run_single_task(task, agent=args.agent, out_dir=out_dir, model=args.model, temperature=args.temperature, max_turns=args.max_turns)
+                outf.write(json.dumps(res) + "\n")
+                outf.flush()
+                print(msg)
 
     # CSV summary via shared helper
     try:

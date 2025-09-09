@@ -62,6 +62,10 @@ python swebench_batch.py --seeds sandbox/swe_tasks.jsonl --limit 2
 ```bash
 python swebench_batch.py --seeds sandbox/swe_tasks.jsonl --limit 2 --agent
 ```
+- Parallel agent batch (example with 12 workers):
+```bash
+python swebench_batch.py --seeds sandbox/swe_tasks.jsonl --limit 2 --agent --jobs 12
+```
 
 ### Guardrails
 - Sandbox outputs and caches are `.gitignore`d; small JSONL task files are kept.
