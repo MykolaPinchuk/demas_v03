@@ -94,8 +94,13 @@ python -m demas.benchmarks.append --csv sandbox/agent_batch_runs/<timestamp>/sum
 python -m demas.benchmarks.sweep \
   --seeds sandbox/swe_tasks.jsonl \
   --limit 0 \
+  --jobs 12 \
   --temperature 0 \
   --notes "full 7-task sweep, temp=0"
+```
+ - Keep best per model on leaderboard after a full sweep:
+```bash
+python -m demas.benchmarks.append --normalize
 ```
 
 ### Benchmarks auto-append (full agent runs)
@@ -116,5 +121,15 @@ CHUTES_API_KEY=YOUR_KEY python swebench_batch.py \
 - Parallel execution: Use `--jobs N` (agent and baseline) to reduce wall time; on a 16‑thread machine with 7 tasks, `--jobs 12–14` works well.
 - Benchmarks auto‑append: Full agent runs (`--limit 0`) are persisted to `BENCHMARKS.md` automatically; add context via `--bench-notes`.
 - More details and trade‑offs: see `speedup.plan`.
+
+### Profiling
+- Agent: convert logs to a CSV profile (per-tool durations):
+```bash
+python -m demas.benchmarks.profile --agent-run-dir sandbox/agent_batch_runs/<timestamp>
+```
+- Baseline: summarize per-stage durations:
+```bash
+python -m demas.benchmarks.profile --baseline-run-dir sandbox/batch_runs/<timestamp>
+```
 
 

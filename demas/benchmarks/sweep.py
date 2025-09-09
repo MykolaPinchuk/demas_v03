@@ -13,80 +13,28 @@ from demas.benchmarks.append import parse_csv, derive_timestamp, append_row
 from demas.core import config as _cfg  # triggers local credentials loading
 
 
-def run_agent_batch(seeds: str, limit: int, model: str, *, temperature: float) -> str:
-    ts = datetime.utcnow().strftime("%Y%m%d_%H%M%S")
-    out_dir = os.path.join("sandbox", "agent_batch_runs", ts)
-    os.makedirs(out_dir, exist_ok=True)
-    os.makedirs(os.path.join(out_dir, "logs"), exist_ok=True)
-    out_path = os.path.join(out_dir, "results.jsonl")
-    csv_path = os.path.join(out_dir, "summary.csv")
-
-    tasks = load_seed_tasks(seeds)
-    if limit > 0:
-        tasks = tasks[:limit]
-
-    with open(out_path, "w", encoding="utf-8") as outf:
-        for task in tasks:
-            env = os.environ.copy()
-            env.setdefault("SWE_IMAGE", "swebench-lite:py3.10")
-            env["TARGET_REPO"] = task.get("repo", "")
-            env["TARGET_REF"] = task.get("ref", "")
-            env["PYTEST_K"] = task.get("pytest_k", "")
-            env["MODEL_NAME"] = model
-            env["MODEL_TEMPERATURE"] = str(temperature)
-            env["MAX_TURNS"] = str(DEFAULT_MAX_TURNS)
-            # per-task timeouts
-            to = task.get("timeouts", {}) or {}
-            if isinstance(to, dict):
-                if to.get("clone"):
-                    env["TIMEOUT_CLONE"] = str(int(to["clone"]))
-                if to.get("install"):
-                    env["TIMEOUT_INSTALL"] = str(int(to["install"]))
-                if to.get("test"):
-                    env["TIMEOUT_TEST"] = str(int(to["test"]))
-            env["RUN_BASE_DIR"] = out_dir
-            env["TASK_ID"] = task.get("task_id", "")
-
-            t0 = time.time()
-            p = subprocess.run([sys.executable, "-m", "demas.swe.oneagent"], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, env=env)
-            dt = time.time() - t0
-            out = p.stdout or ""
-            # tail extraction
-            tail = ""
-            for ln in out.splitlines()[::-1]:
-                s = (ln or "").strip()
-                if not s:
-                    continue
-                if ("passed" in s) or ("failed" in s) or ("error" in s):
-                    tail = s
-                    break
-            status = "pass" if (" passed" in tail and " failed" not in tail and " error" not in tail) else "fail"
-            rec = {
-                "task_id": task.get("task_id", ""),
-                "repo": task.get("repo", ""),
-                "ref": task.get("ref", ""),
-                "pytest_k": task.get("pytest_k", ""),
-                "status": status,
-                "duration_s": round(dt, 3),
-                "tail": tail,
-                "model": model,
-                "temperature": temperature,
-                "max_turns": DEFAULT_MAX_TURNS,
-            }
-            outf.write(json.dumps(rec) + "\n")
-            outf.flush()
-            print(f"{task.get('task_id','')} -> {tail} ({status})")
-
-    # write CSV
-    rows = []
-    with open(out_path, "r", encoding="utf-8") as inf:
-        for line in inf:
-            try:
-                rows.append(json.loads(line))
-            except json.JSONDecodeError:
-                pass
-    write_agent_csv(rows, csv_path)
-    print(f"Wrote results: {out_path}\nWrote CSV: {csv_path}")
+def run_agent_batch(seeds: str, limit: int, model: str, *, temperature: float, jobs: int) -> str:
+    """Delegate to swebench_batch.py to leverage its parallel --jobs implementation.
+    Returns the summary.csv path parsed from stdout.
+    """
+    cmd = [
+        sys.executable,
+        os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "swebench_batch.py"),
+        "--seeds", seeds,
+        "--limit", str(limit),
+        "--agent",
+        "--model", model,
+        "--temperature", str(temperature),
+        "--jobs", str(max(1, jobs)),
+    ]
+    p = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
+    out = p.stdout or ""
+    csv_path = ""
+    for ln in out.splitlines():
+        if ln.startswith("Wrote CSV:"):
+            csv_path = ln.split(":", 1)[1].strip()
+    if not csv_path:
+        raise RuntimeError(f"Could not determine CSV path from swebench_batch output:\n{out}")
     return csv_path
 
 
@@ -98,6 +46,7 @@ def main(argv: List[str]) -> int:
     ap.add_argument("--models", nargs="*", default=None, help="Override model list; default uses TRACKED_MODELS")
     ap.add_argument("--notes", default="", help="Notes appended to BENCHMARKS.md rows (include 'full' to mark leaderboard)")
     ap.add_argument("--temperature", type=float, default=DEFAULT_TEMPERATURE, help="Sampling temperature for all models (default from registry)")
+    ap.add_argument("--jobs", type=int, default=12, help="Parallel jobs per model for task runs (agent mode)")
     args = ap.parse_args(argv)
 
     if not os.environ.get("CHUTES_API_KEY"):
@@ -108,11 +57,19 @@ def main(argv: List[str]) -> int:
     print(f"Sweeping {len(models)} models...")
     for m in models:
         print(f"\n=== Model: {m} ===")
-        csv_path = run_agent_batch(args.seeds, args.limit, m, temperature=args.temperature)
+        csv_path = run_agent_batch(args.seeds, args.limit, m, temperature=args.temperature, jobs=args.jobs)
         info = parse_csv(csv_path)
         ts = derive_timestamp(csv_path)
         append_row("BENCHMARKS.md", ts, info.get("model", m), info.get("pass_rate", ""), info.get("p50", ""), info.get("p95", ""), args.notes)
         print(f"Appended BENCHMARKS row for {m} @ {ts}")
+    # Normalize leaderboard to best per model if notes indicate full suite
+    try:
+        if "full" in (args.notes or '').lower():
+            from demas.benchmarks.append import normalize_leaderboard
+            normalize_leaderboard("BENCHMARKS.md")
+            print("Normalized leaderboard to best row per model.")
+    except Exception as e:
+        print(f"(Normalization failed): {e}")
     return 0
 
 
