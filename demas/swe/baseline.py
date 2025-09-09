@@ -126,12 +126,16 @@ def main(argv: list[str]) -> int:
     bash_script = f"""
 set -e
 rm -rf {proj_q}
+echo STAGE:CLONE:START $(date +%s.%N)
 timeout {TIMEOUT_CLONE}s git clone --depth 1 {shlex.quote(repo)} {proj_q}
 cd {proj_q}
 if [ -n {shlex.quote(ref or '')} ]; then \
   timeout {TIMEOUT_CLONE}s git fetch --depth 1 origin {shlex.quote(ref)} && \
   git checkout -q {shlex.quote(ref)}; \
 fi
+echo STAGE:CLONE:END $(date +%s.%N)
+
+echo STAGE:INSTALL:START $(date +%s.%N)
 python -m pip install -q -U pip
 # Common build backends used by modern projects
 timeout 10s python -m pip install -q hatchling hatch-vcs || true
@@ -141,25 +145,40 @@ timeout {TIMEOUT_INSTALL}s python -m pip install -q -e . || true
 if [ -f testing/requirements.txt ]; then \
   timeout {TIMEOUT_INSTALL}s python -m pip install -q -r testing/requirements.txt; \
 fi
+echo STAGE:INSTALL:END $(date +%s.%N)
+
 # Optional pre-patch run
 {pre_run_cmd}
 # Apply patch if provided
 {patch_embed}
 # Run tests after (or only run if no pre-patch)
+echo STAGE:TEST:START $(date +%s.%N)
 {post_run_cmd}
+echo STAGE:TEST:END $(date +%s.%N)
 """
 
     t0 = time.time()
     code, out, err = run_in_container(bash_script)
     elapsed = time.time() - t0
-    # Extract BEFORE/AFTER tails if present
+    # Extract BEFORE/AFTER tails and stage timings if present
     before_tail = ""
     after_tail = ""
+    t_markers = {"CLONE": {"start": None, "end": None}, "INSTALL": {"start": None, "end": None}, "TEST": {"start": None, "end": None}}
     for ln in (out or "").splitlines():
         if ln.startswith("BEFORE_TAIL:"):
             before_tail = ln.split(":", 1)[1].strip()
         if ln.startswith("AFTER_TAIL:"):
             after_tail = ln.split(":", 1)[1].strip()
+        if ln.startswith("STAGE:"):
+            try:
+                parts = ln.strip().split()
+                tag = parts[0]  # e.g., STAGE:CLONE:START
+                ts = float(parts[1]) if len(parts) > 1 else None
+                _, stage, kind = tag.split(":", 2)
+                if stage in t_markers and kind.lower() in ("start", "end") and ts is not None:
+                    t_markers[stage][kind.lower()] = ts
+            except Exception:
+                pass
     tail = after_tail or nonempty_tail(out) or nonempty_tail(err) or "(no output)"
 
     status = "pass" if (" passed" in tail and " failed" not in tail and " error" not in tail) else ("fail" if code != 0 else "ok")
@@ -172,6 +191,14 @@ fi
     # Write artifacts
     with open(os.path.join(run_dir, "pytest_tail.txt"), "w", encoding="utf-8") as f:
         f.write(tail + "\n")
+
+    # Compute durations if both start/end are present
+    def _dur(stage: str) -> float:
+        st = t_markers.get(stage, {}).get("start")
+        en = t_markers.get(stage, {}).get("end")
+        if isinstance(st, float) and isinstance(en, float) and en >= st:
+            return round(en - st, 3)
+        return 0.0
 
     result = {
         "task_id": args.task_id or "",
@@ -188,6 +215,9 @@ fi
             ("pass" if (" passed" in before_tail and " failed" not in before_tail and " error" not in before_tail) else ("fail" if before_tail else ""))
             if args.pre_patch_run else ""
         ),
+        "duration_clone_s": _dur("CLONE"),
+        "duration_install_s": _dur("INSTALL"),
+        "duration_test_s": _dur("TEST"),
     }
     with open(os.path.join(run_dir, "result.json"), "w", encoding="utf-8") as f:
         json.dump(result, f, indent=2)
