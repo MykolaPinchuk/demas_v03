@@ -44,6 +44,9 @@ Then open the newest `sandbox/agent_batch_runs/<ts>/summary.csv` and record:
 | 20250907_202410     | Qwen/Qwen3-Coder-480B-A35B-Instruct-FP8    | 0.86      | 46.330         | 60.000         | full 7-task sweep, temp=0 |
 | 20250907_202938     | Qwen/Qwen3-Coder-30B-A3B-Instruct          | 0.71      | 23.524         | 33.578         | full 7-task sweep, temp=0 |
 | 20250907_203247     | zai-org/GLM-4.5-FP8                        | 0.86      | 24.169         | 27.281         | full 7-task sweep, temp=0 |
+| 20250909_010004 | Qwen/Qwen3-Coder-480B-A35B-Instruct-FP8 | 0.86 | 31.878 | 42.294 | full 7-task suite, Qwen 480B FP8, jobs=12, temp=0.2 |
+| 20250909_010052 | zai-org/GLM-4.5-FP8 | 0.86 | 26.284 | 38.860 | full 7-task suite, GLM-4.5-FP8, jobs=12, temp=0.2 |
+| 20250909_010142 | Qwen/Qwen3-Coder-480B-A35B-Instruct-FP8 | 0.71 | 36.996 | 39.153 | full 7-task suite, Qwen 480B FP8, jobs=7, temp=0.2 |
 <!-- MAIN_TABLE_END -->
 
 ### Run log (all runs)
@@ -64,6 +67,9 @@ Then open the newest `sandbox/agent_batch_runs/<ts>/summary.csv` and record:
 | 20250905_022509     | openai/gpt-oss-20b                         | 0.00      | 13.338         | 12.630         | both failed (API error) |
 | 20250905_022117     | moonshotai/Kimi-Dev-72B                    | 0.00      | 3.450          | 3.138          | both failed (runtime error) |
 | 20250909_003421 | moonshotai/Kimi-K2-Instruct-75k | 1.00 | 19.607 | 15.536 | 2-task smoke, Kimi-K2-75k, temp=0.2 |
+| 20250909_010004 | Qwen/Qwen3-Coder-480B-A35B-Instruct-FP8 | 0.86 | 31.878 | 42.294 | full 7-task suite, Qwen 480B FP8, jobs=12, temp=0.2 |
+| 20250909_010052 | zai-org/GLM-4.5-FP8 | 0.86 | 26.284 | 38.860 | full 7-task suite, GLM-4.5-FP8, jobs=12, temp=0.2 |
+| 20250909_010142 | Qwen/Qwen3-Coder-480B-A35B-Instruct-FP8 | 0.71 | 36.996 | 39.153 | full 7-task suite, Qwen 480B FP8, jobs=7, temp=0.2 |
 <!-- LOG_TABLE_END -->
 
 Notes:

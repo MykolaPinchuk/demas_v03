@@ -147,6 +147,7 @@ def main(argv: List[str]) -> int:
     parser.add_argument("--temperature", type=float, default=float(os.environ.get("MODEL_TEMPERATURE", "0.2")), help="Sampling temperature (env MODEL_TEMPERATURE default)")
     parser.add_argument("--max-turns", dest="max_turns", type=int, default=int(os.environ.get("MAX_TURNS", "10")), help="Maximum agent turns (env MAX_TURNS default)")
     parser.add_argument("--jobs", type=int, default=1, help="Parallel jobs (agent mode only). Default: 1")
+    parser.add_argument("--bench-notes", default=os.environ.get("BENCH_NOTES", ""), help="Optional notes to include when auto-appending full-suite agent results to BENCHMARKS.md (include 'full' to appear on leaderboard)")
     args = parser.parse_args(argv)
 
     tasks = load_seed_tasks(args.seeds)
@@ -211,6 +212,17 @@ def main(argv: List[str]) -> int:
         else:
             write_baseline_csv(rows, csv_path)
         print(f"Wrote results: {out_path}\nWrote CSV: {csv_path}")
+        # Auto-append to BENCHMARKS for full-suite agent runs
+        if args.agent and args.limit == 0:
+            try:
+                from demas.benchmarks.append import parse_csv, derive_timestamp, append_row
+                info = parse_csv(csv_path)
+                ts = derive_timestamp(csv_path)
+                notes = args.bench_notes or "full suite auto-append"
+                append_row("BENCHMARKS.md", ts, info.get("model", ""), info.get("pass_rate", ""), info.get("p50", ""), info.get("p95", ""), notes)
+                print(f"Appended BENCHMARKS row ({notes})")
+            except Exception as e:
+                print(f"(Auto-append failed): {e}")
     except Exception as e:
         print(f"(CSV summary failed): {e}")
 

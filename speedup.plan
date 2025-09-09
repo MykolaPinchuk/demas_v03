@@ -50,3 +50,9 @@ Operational recommendations
 - Default profile on 16 threads: 12 parallel tasks; mount pip cache; heavy image available; default single-proc tests; triage+full enabled by flag; xdist opt-in per-repo.
 - Resource controls: Consider --cpuset-cpus to reduce context switching; memory caps to avoid swap under high parallelism.
 
+Current empirical note (this machine)
+- Full 7-task agent suite:
+  - Qwen 480B FP8: jobs=12 -> 42.98s; jobs=7 -> 62.60s (jobs=12 faster)
+  - GLM-4.5-FP8: jobs=12 -> 41.08s
+- Recommendation: for 7 tasks on 16-thread host, start with --jobs 12–14; adjust per workload.
+

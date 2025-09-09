@@ -44,6 +44,7 @@ DEPS_DIR      = "/workspace/_deps"  # persisted on host via volume mount
 TARGET_REPO = os.environ.get("TARGET_REPO", "https://github.com/pytest-dev/pytest")
 TARGET_REF  = os.environ.get("TARGET_REF", "")
 PYTEST_K    = os.environ.get("PYTEST_K", "")  # default to empty (no filter)
+PROJECT_DIR = os.environ.get("PROJECT_DIR", None)
 
 # Model override via env
 MODEL_NAME = os.environ.get("MODEL_NAME", "")
@@ -165,13 +166,16 @@ async def swe_clone(*, repo_url: str, ref: Optional[str] = None) -> str:
         "tool_result": "", "usage": None, "run_id": RUN_ID, "task_id": TASK_ID,
         "model": MODEL_NAME or None, "temperature": MODEL_TEMPERATURE,
     })
+    # Determine a unique project directory name
+    proj = PROJECT_DIR or f"project_{(TASK_ID or 'task').replace('/', '_')}_{RUN_ID[:8]}"
+    proj_q = shlex.quote(proj)
     cmds = [
-        f"rm -rf project",
-        f"timeout {TIMEOUT_CLONE}s git clone --depth 1 {shlex.quote(repo_url)} project",
+        f"rm -rf {proj_q}",
+        f"timeout {TIMEOUT_CLONE}s git clone --depth 1 {shlex.quote(repo_url)} {proj_q}",
     ]
     if ref:
         cmds.append(
-            f"cd project && timeout {TIMEOUT_CLONE}s git fetch --depth 1 origin {shlex.quote(ref)} && git checkout -q {shlex.quote(ref)}"
+            f"cd {proj_q} && timeout {TIMEOUT_CLONE}s git fetch --depth 1 origin {shlex.quote(ref)} && git checkout -q {shlex.quote(ref)}"
         )
     code, out, err = _docker(" && ".join(cmds))
     res = "(cloned)" if code == 0 else f"(exit {code})\nSTDOUT:\n{out}\nSTDERR:\n{err}"
@@ -184,8 +188,10 @@ async def swe_clone(*, repo_url: str, ref: Optional[str] = None) -> str:
     return res
 
 async def swe_install(*, req_file: str = "requirements.txt") -> str:
+    proj = PROJECT_DIR or f"project_{(TASK_ID or 'task').replace('/', '_')}_{RUN_ID[:8]}"
+    proj_q = shlex.quote(proj)
     cmd = (
-        "cd project && "
+        f"cd {proj_q} && "
         "python -m pip install -q -U pip && "
         "timeout 10s python -m pip install -q hatchling hatch-vcs meson-python ninja cython || true && "
         # Try editable install first, then fallback to regular install if it fails
@@ -227,9 +233,11 @@ async def swe_pytest_auto(*, pytest_args: str = "-q") -> str:
     })
 
     # First attempt
+    proj = PROJECT_DIR or f"project_{(TASK_ID or 'task').replace('/', '_')}_{RUN_ID[:8]}"
+    proj_q = shlex.quote(proj)
     cmd = (
-        f"export PYTHONPATH=/workspace/project:/workspace/project/src:{DEPS_DIR}:$PYTHONPATH; "
-        f"cd project && timeout {TIMEOUT_TEST}s python -m pytest {pytest_args}"
+        f"export PYTHONPATH=/workspace/{proj}:/workspace/{proj}/src:{DEPS_DIR}:$PYTHONPATH; "
+        f"cd {proj_q} && timeout {TIMEOUT_TEST}s python -m pytest {pytest_args}"
     )
     code, out, err = _docker(cmd)
     combined = (out or "") + ("\n" + err if err else "")
@@ -273,7 +281,7 @@ async def swe_pytest_auto(*, pytest_args: str = "-q") -> str:
             pass
         # Verify import with local path first
         verify_cmd = (
-            f"export PYTHONPATH=/workspace/project:{DEPS_DIR}:$PYTHONPATH; "
+            f"export PYTHONPATH=/workspace/{proj}:{DEPS_DIR}:$PYTHONPATH; "
             f"python -c 'import {top_pkg}; print(\"ok\")'"
         )
         vcode, vout, verr = _docker(verify_cmd)
@@ -312,8 +320,8 @@ async def swe_pytest_auto(*, pytest_args: str = "-q") -> str:
     # " passed" so termination can trigger reliably.
     if code == 0 and ((" passed" not in tail) or not tail.strip()):
         code_s, out_s, err_s = _docker(
-            f"export PYTHONPATH=/workspace/project:/workspace/project/src:{DEPS_DIR}:$PYTHONPATH; "
-            f"cd project && timeout {TIMEOUT_TEST}s python -m pytest -q | tail -n 1"
+            f"export PYTHONPATH=/workspace/{proj}:/workspace/{proj}/src:{DEPS_DIR}:$PYTHONPATH; "
+            f"cd {proj_q} && timeout {TIMEOUT_TEST}s python -m pytest -q | tail -n 1"
         )
         last_s = [ln for ln in (out_s or "").splitlines() if ln.strip()]
         if last_s:
@@ -329,9 +337,11 @@ async def swe_pytest_auto(*, pytest_args: str = "-q") -> str:
     return res
 
 async def swe_pytest(*, pytest_args: str = "-q") -> str:
+    proj = PROJECT_DIR or f"project_{(TASK_ID or 'task').replace('/', '_')}_{RUN_ID[:8]}"
+    proj_q = shlex.quote(proj)
     cmd = (
-        f"export PYTHONPATH=/workspace/project:/workspace/project/src:{DEPS_DIR}:$PYTHONPATH; "
-        f"cd project && timeout {TIMEOUT_TEST}s python -m pytest {pytest_args}"
+        f"export PYTHONPATH=/workspace/{proj}:/workspace/{proj}/src:{DEPS_DIR}:$PYTHONPATH; "
+        f"cd {proj_q} && timeout {TIMEOUT_TEST}s python -m pytest {pytest_args}"
     )
     _log_record({
         "timestamp": _now_iso(), "role": "assistant", "content": "CALL swe_pytest",
@@ -354,9 +364,11 @@ async def swe_pytest(*, pytest_args: str = "-q") -> str:
 async def swe_pytest_full(*, pytest_args: str = "-q -x -vv") -> str:
     """Run pytest and return the last ~200 lines of combined stdout+stderr, with ' passed' sanitized
     to avoid triggering termination conditions inadvertently."""
+    proj = PROJECT_DIR or f"project_{(TASK_ID or 'task').replace('/', '_')}_{RUN_ID[:8]}"
+    proj_q = shlex.quote(proj)
     cmd = (
-        f"export PYTHONPATH=/workspace/project:/workspace/project/src:{DEPS_DIR}:$PYTHONPATH; "
-        f"cd project && timeout {TIMEOUT_TEST}s python -m pytest {pytest_args}"
+        f"export PYTHONPATH=/workspace/{proj}:/workspace/{proj}/src:{DEPS_DIR}:$PYTHONPATH; "
+        f"cd {proj_q} && timeout {TIMEOUT_TEST}s python -m pytest {pytest_args}"
     )
     _log_record({
         "timestamp": _now_iso(), "role": "assistant", "content": "CALL swe_pytest_full",
@@ -382,8 +394,10 @@ async def swe_read_file(*, path: str, max_bytes: int = 20000) -> str:
     """Read a file inside the project (relative path), returning up to max_bytes."""
     rp = shlex.quote(path)
     mb = max(1, int(max_bytes))
+    proj = PROJECT_DIR or f"project_{(TASK_ID or 'task').replace('/', '_')}_{RUN_ID[:8]}"
+    proj_q = shlex.quote(proj)
     cmd = (
-        f"cd project && if [ -f {rp} ]; then head -c {mb} -- {rp}; else echo '(file not found)'; fi"
+        f"cd {proj_q} && if [ -f {rp} ]; then head -c {mb} -- {rp}; else echo '(file not found)'; fi"
     )
     _log_record({
         "timestamp": _now_iso(), "role": "assistant", "content": "CALL swe_read_file",
@@ -434,11 +448,12 @@ async def swe_apply_patch_text(*, diff_text: str) -> str:
         "tool_result": "", "usage": None, "run_id": RUN_ID, "task_id": TASK_ID,
         "model": MODEL_NAME or None, "temperature": MODEL_TEMPERATURE,
     })
+    proj = PROJECT_DIR or f"project_{(TASK_ID or 'task').replace('/', '_')}_{RUN_ID[:8]}"
     script = (
         "set -e\n"
         "cd /workspace\n"
         "printf '%s' \"" + diff_text.replace("\\", "\\\\").replace("\"", "\\\"") + "\" > patch.diff\n"
-        "cd project\n"
+        f"cd {shlex.quote(proj)}\n"
         "timeout 3s git apply /workspace/patch.diff && echo PATCH_APPLIED || (echo PATCH_FAILED >&2; exit 3)\n"
     )
     code, out, err = _docker(script)

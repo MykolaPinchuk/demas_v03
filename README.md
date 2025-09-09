@@ -98,6 +98,17 @@ python -m demas.benchmarks.sweep \
   --notes "full 7-task sweep, temp=0"
 ```
 
+### Benchmarks auto-append (full agent runs)
+- When running a full agent suite via `swebench_batch.py` (i.e., `--agent` with `--limit 0`), a benchmark row is automatically appended to `BENCHMARKS.md` using the generated `summary.csv`.
+- Use `--bench-notes "full ..."` to mark leaderboard-eligible runs and add context. Example:
+```bash
+CHUTES_API_KEY=YOUR_KEY python swebench_batch.py \
+  --seeds sandbox/swe_tasks.jsonl \
+  --agent \
+  --jobs 12 \
+  --bench-notes "full 7-task suite, jobs=12, temp=0.2"
+```
+
 ### Next steps
 - See `plan.md` for the roadmap (expand task set; agent lifts over baseline; SWE‑bench adapter; logging; config sweeps).
 

@@ -67,6 +67,13 @@ python swebench_batch.py --seeds sandbox/swe_tasks.jsonl --limit 2 --agent
 python swebench_batch.py --seeds sandbox/swe_tasks.jsonl --limit 2 --agent --jobs 12
 ```
 
+### Benchmarks auto-append
+- Full agent suite runs (`--agent` with `--limit 0`) auto-append a row to `BENCHMARKS.md`.
+- Add notes (and leaderboard eligibility) with:
+```bash
+python swebench_batch.py --seeds sandbox/swe_tasks.jsonl --agent --limit 0 --bench-notes "full 7-task suite, jobs=12, temp=0.2"
+```
+
 ### Guardrails
 - Sandbox outputs and caches are `.gitignore`d; small JSONL task files are kept.
 - `.cursorignore` reduces context bloat for agents.
