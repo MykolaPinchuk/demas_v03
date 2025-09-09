@@ -63,6 +63,7 @@ Then open the newest `sandbox/agent_batch_runs/<ts>/summary.csv` and record:
 | 20250905_022331     | openai/gpt-oss-120b                        | 0.00      | 11.326         | 11.000         | both failed (API error) |
 | 20250905_022509     | openai/gpt-oss-20b                         | 0.00      | 13.338         | 12.630         | both failed (API error) |
 | 20250905_022117     | moonshotai/Kimi-Dev-72B                    | 0.00      | 3.450          | 3.138          | both failed (runtime error) |
+| 20250909_003421 | moonshotai/Kimi-K2-Instruct-75k | 1.00 | 19.607 | 15.536 | 2-task smoke, Kimi-K2-75k, temp=0.2 |
 <!-- LOG_TABLE_END -->
 
 Notes:

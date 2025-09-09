@@ -8,6 +8,7 @@ This file is a knowledge transfer from old agents to new coding agents which wil
   - `./.env.local`
   - `./demas/credentials.txt`
 - Format: `KEY=VALUE` (e.g., `CHUTES_API_KEY=...`). Comments `#` and blanks allowed. Existing OS env vars take precedence.
+ - These files are read automatically at import time by `demas.core.config`, so you can run agent commands without exporting `CHUTES_API_KEY` in your shell if one of the files above is present.
 
 ### Entrypoints
 - Single task runner: `swebench_run_one.py`

@@ -28,6 +28,7 @@ Docs map:
 - Chutes API key for agent mode: set `CHUTES_API_KEY`.
   - Optional: place secrets in `~/.config/demas/credentials.env`, repo-local `.env.local`, or `demas/credentials.txt`:
     - Lines: `KEY=VALUE` (e.g., `CHUTES_API_KEY=...`). Comments `#` and blanks are ignored. Existing env vars are not overridden.
+  - These files are auto-loaded by `demas.core.config` on import, so you can run agent commands without exporting `CHUTES_API_KEY` in your shell if any of them is present.
 
 ### Build the Docker image
 ```bash
@@ -55,6 +56,11 @@ CHUTES_API_KEY=YOUR_KEY python swebench_run_one.py --task-id swe_demo_numpy_fina
 Batch:
 ```bash
 CHUTES_API_KEY=YOUR_KEY python swebench_batch.py --seeds sandbox/swe_tasks.jsonl --agent
+```
+If your key is stored in one of the auto-loaded files above, you can omit the inline environment variable:
+```bash
+python swebench_run_one.py --task-id swe_demo_numpy_financial --agent
+python swebench_batch.py --seeds sandbox/swe_tasks.jsonl --agent
 ```
 Agent batch outputs:
 - `sandbox/agent_batch_runs/<timestamp>/{results.jsonl, summary.csv}` (when using `--agent`)
