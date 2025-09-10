@@ -14,12 +14,19 @@ def parse_csv(path: str):
     model = ""
     temperature = ""
     max_turns = ""
+    tokens_total = 0
     for row in rows:
         if len(row) >= 7 and row[0] and row[0] != "task_id" and row[0] != "pass_rate":
             if not model and len(row) >= 7:
                 model = row[4]
                 temperature = row[5]
                 max_turns = row[6]
+            # sum tokens_total if present (new columns at indices -1)
+            try:
+                if row and row[-1] and row[0] != "task_id":
+                    tokens_total += int(row[-1])
+            except Exception:
+                pass
         if len(row) >= 2:
             if row[0] == "pass_rate":
                 pass_rate = row[1]
@@ -34,6 +41,7 @@ def parse_csv(path: str):
         "pass_rate": pass_rate,
         "p50": p50,
         "p95": p95,
+        "tokens_total": str(tokens_total),
     }
 
 
@@ -41,8 +49,9 @@ def derive_timestamp(csv_path: str) -> str:
     return os.path.basename(os.path.dirname(csv_path))
 
 
-def append_row(md_path: str, ts: str, model: str, pass_rate: str, p50: str, p95: str, notes: str):
-    line = f"| {ts} | {model} | {pass_rate or 'NA'} | {p50 or 'NA'} | {p95 or 'NA'} | {notes or ''} |\n"
+def append_row(md_path: str, ts: str, model: str, pass_rate: str, p50: str, p95: str, notes: str, tokens: str = ""):
+    note_tokens = f"tokens={tokens} " if tokens else ""
+    line = f"| {ts} | {model} | {pass_rate or 'NA'} | {p50 or 'NA'} | {p95 or 'NA'} | {note_tokens}{notes or ''} |\n"
     with open(md_path, "r+", encoding="utf-8") as f:
         content = f.read()
         # Always append to the run log table
