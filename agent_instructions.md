@@ -15,3 +15,5 @@
 \n+## Credentials policy (important)
 \n+- `CHUTES_API_KEY` is already configured in `demas/credentials.txt` on this machine and is auto‑loaded by `demas.core.config`.
 - Do not ask the user for the key. Never print or echo the key in logs or console.
+- Be direct and clear. 
+- Human use is 'he', not 'they'.

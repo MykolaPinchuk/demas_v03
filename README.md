@@ -69,7 +69,7 @@ CHUTES_API_KEY=YOUR_KEY OPENROUTER_API_KEY=YOUR_OR_KEY \
 python swebench_batch.py --seeds sandbox/swe_tasks.jsonl --agent --jobs 12
 ```
 Notes:
-- `--jobs` applies to agent mode only. Baseline runs are sequential.
+- `--jobs` controls parallelism for both baseline and agent modes. If omitted, the runner auto-selects `max(12, cpu_count - 2)`.
 Agent batch outputs:
 - `sandbox/agent_batch_runs/<timestamp>/{results.jsonl, summary.csv}` (when using `--agent`)
 
