@@ -12,3 +12,6 @@
 - Context of an agent gets filled up very fast. This forces early restarts and slows down development. Lets maintain .cursorignore (earlier called context_ignore.md) file. This file should have structure similar to .gitignore and contain files and folders which agent should not read. This should slow down filling of its context window. If you think you really need to read some file from refrenced in .cusrsorignore and you know exactly what for, go ahead and read it.
 - It is very important to keep codebase maintainable, clean, and intuitive.
 - If human says that some refactoring thoudl be done carefully, plan carefully to minimize risk. Use temporary thin shims if needed.
+\n+## Credentials policy (important)
+\n+- `CHUTES_API_KEY` is already configured in `demas/credentials.txt` on this machine and is auto‑loaded by `demas.core.config`.
+- Do not ask the user for the key. Never print or echo the key in logs or console.

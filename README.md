@@ -29,6 +29,7 @@ Docs map:
   - Optional: place secrets in `~/.config/demas/credentials.env`, repo-local `.env.local`, or `demas/credentials.txt`:
     - Lines: `KEY=VALUE` (e.g., `CHUTES_API_KEY=...`). Comments `#` and blanks are ignored. Existing env vars are not overridden.
   - These files are auto-loaded by `demas.core.config` on import, so you can run agent commands without exporting `CHUTES_API_KEY` in your shell if any of them is present.
+  - Project default: this repository already has a usable `CHUTES_API_KEY` stored in `demas/credentials.txt` on this machine. It is auto-loaded; do not ask the user for the key and never print it in logs.
 
 ### Build the Docker image
 ```bash
