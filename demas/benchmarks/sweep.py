@@ -102,7 +102,7 @@ def main(argv: List[str]) -> int:
         except Exception:
             agent_pass_rate = 0.0
         if agent_pass_rate > baseline_pass_rate:
-            append_row("BENCHMARKS.md", ts, info.get("model", m), info.get("pass_rate", ""), info.get("p50", ""), info.get("p95", ""), args.notes, info.get("tokens_total", ""))
+            append_row("BENCHMARKS.md", ts, info.get("model", m), info.get("pass_rate", ""), info.get("p50", ""), info.get("p95", ""), args.notes)
             print(f"Appended BENCHMARKS row for {m} @ {ts} (agent {agent_pass_rate:.2f} > baseline {baseline_pass_rate:.2f})")
         else:
             print(f"Skipped append for {m}: agent {agent_pass_rate:.2f} <= baseline {baseline_pass_rate:.2f}")

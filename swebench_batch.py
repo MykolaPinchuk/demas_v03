@@ -112,40 +112,6 @@ def run_agent_for_task(task: Dict[str, Any], *, out_dir: str, model: str, temper
             except Exception:
                 pass
     status = "pass" if " passed" in tail and " failed" not in tail and " error" not in tail else "fail"
-    # Aggregate token usage from agent log if present
-    def _read_tokens_from_log(log_path: str) -> Tuple[int, int, int]:
-        ti = to = tt = 0
-        try:
-            with open(log_path, "r", encoding="utf-8") as f:
-                import json as _json
-                for line in f:
-                    line = line.strip()
-                    if not line:
-                        continue
-                    rec = _json.loads(line)
-                    usage = rec.get("usage") if isinstance(rec, dict) else None
-                    if not usage:
-                        continue
-                    # Normalize common fields
-                    pi = usage.get("prompt_tokens") or usage.get("input_tokens") or usage.get("input") or 0
-                    po = usage.get("completion_tokens") or usage.get("output_tokens") or usage.get("output") or 0
-                    pt = usage.get("total_tokens") or usage.get("total") or 0
-                    # Some providers may only return total
-                    if isinstance(pi, int):
-                        ti += pi
-                    if isinstance(po, int):
-                        to += po
-                    if isinstance(pt, int):
-                        tt += pt
-        except Exception:
-            pass
-        if tt == 0:
-            tt = ti + to
-        return int(ti), int(to), int(tt)
-
-    log_path = os.path.join(out_dir, "logs", f"{task.get('task_id','')}.jsonl")
-    tokens_input, tokens_output, tokens_total = _read_tokens_from_log(log_path)
-
     return {
         "task_id": task.get("task_id", ""),
         "repo": task.get("repo", ""),
@@ -157,9 +123,6 @@ def run_agent_for_task(task: Dict[str, Any], *, out_dir: str, model: str, temper
         "model": model_used,
         "temperature": temperature,
         "max_turns": max_turns,
-        "tokens_input": tokens_input,
-        "tokens_output": tokens_output,
-        "tokens_total": tokens_total,
     }
 
 

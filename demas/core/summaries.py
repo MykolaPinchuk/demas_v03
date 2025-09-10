@@ -35,7 +35,7 @@ def write_agent_csv(rows: List[Dict[str, Any]], csv_path: str) -> None:
     durations = [r.get("duration_s", 0.0) for r in rows if isinstance(r.get("duration_s"), (int, float))]
     with open(csv_path, "w", newline="", encoding="utf-8") as cf:
         w = csv.writer(cf)
-        w.writerow(["task_id", "status", "duration_s", "tail", "model", "temperature", "max_turns", "tokens_input", "tokens_output", "tokens_total"])  # header
+        w.writerow(["task_id", "status", "duration_s", "tail", "model", "temperature", "max_turns"])  # header
         for r in rows:
             w.writerow([
                 r.get("task_id", ""),
@@ -45,9 +45,6 @@ def write_agent_csv(rows: List[Dict[str, Any]], csv_path: str) -> None:
                 r.get("model", ""),
                 r.get("temperature", ""),
                 r.get("max_turns", ""),
-                r.get("tokens_input", ""),
-                r.get("tokens_output", ""),
-                r.get("tokens_total", ""),
             ])
         w.writerow([])
         w.writerow(["pass_rate", f"{pass_rate:.2f}"])

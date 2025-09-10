@@ -34,6 +34,8 @@ def parse_csv(path: str):
                 p50 = row[1]
             elif row[0] == "p95_duration_s":
                 p95 = row[1]
+    # If no tokens recorded, return empty string so benchmarks omit tokens=
+    tokens_str = str(tokens_total) if tokens_total > 0 else ""
     return {
         "model": model,
         "temperature": temperature,
@@ -41,7 +43,7 @@ def parse_csv(path: str):
         "pass_rate": pass_rate,
         "p50": p50,
         "p95": p95,
-        "tokens_total": str(tokens_total),
+        "tokens_total": tokens_str,
     }
 
 

@@ -77,7 +77,7 @@ def make_client(model_name: str, *, temperature: float) -> OpenAIChatCompletionC
     if provider == "openrouter":
         if not OPENROUTER_API_KEY:
             raise RuntimeError("OPENROUTER_API_KEY is not set but required for model '%s'" % model_name)
-        return OpenAIChatCompletionClient(
+        client = OpenAIChatCompletionClient(
             model=model_name,
             api_key=OPENROUTER_API_KEY,
             base_url=OPENROUTER_BASE_URL,
@@ -85,8 +85,9 @@ def make_client(model_name: str, *, temperature: float) -> OpenAIChatCompletionC
             include_name_in_message=True,
             model_info=BASE_MODEL_INFO,
         )
+        return _enable_usage_injection(client)
     # Default provider: Chutes
-    return OpenAIChatCompletionClient(
+    client = OpenAIChatCompletionClient(
         model=model_name,
         api_key=CHUTES_API_KEY,
         base_url=CHUTES_BASE_URL,
@@ -94,6 +95,12 @@ def make_client(model_name: str, *, temperature: float) -> OpenAIChatCompletionC
         include_name_in_message=True,
         model_info=BASE_MODEL_INFO,
     )
+    return _enable_usage_injection(client)
+
+
+def _enable_usage_injection(client: OpenAIChatCompletionClient) -> OpenAIChatCompletionClient:
+    # No-op: token usage capture removed for now
+    return client
 
 async def preflight(client: OpenAIChatCompletionClient) -> bool:
     try:
@@ -602,6 +609,7 @@ When you run tests (step 3 or after patch), paste ONLY the exact string returned
             "temperature": MODEL_TEMPERATURE,
             "started_at": _now_iso(),
         })
+    # Use streaming UI for consistent console output
     res = await Console(team.run_stream(task=task))
     print(f"\n--- SUMMARY ---\nElapsed seconds: {time.time() - t0:.2f}")
     try:
