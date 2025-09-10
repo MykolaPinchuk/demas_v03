@@ -23,9 +23,9 @@ TRACKED_MODELS: List[str] = [
     # Zhipu/GLM (Chutes)
     "zai-org/GLM-4.5-FP8",
     "zai-org/GLM-4.5-Air",
-    # OpenRouter cheap models
+    # OpenRouter models
     "openai/gpt-5-mini",
-    "openai/gpt-oss-120b:free",
+    "openai/gpt-oss-120b",
     # Others observed in logs
     "unsloth/gemma-3-12b-it",
 ]

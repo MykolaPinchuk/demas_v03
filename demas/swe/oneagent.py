@@ -31,7 +31,7 @@ MODEL_CANDIDATES: List[str] = [
     "deepseek-ai/DeepSeek-V3-0324",
     # OpenRouter cheap models (only used if OpenRouter key is set)
     "openai/gpt-5-mini",
-    "openai/gpt-oss-120b:free",
+    "openai/gpt-oss-120b",
 ]
 BASE_MODEL_INFO = {
     "vision": False, "function_calling": True,
