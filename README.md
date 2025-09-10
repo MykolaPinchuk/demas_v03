@@ -123,7 +123,6 @@ CHUTES_API_KEY=YOUR_KEY python swebench_batch.py \
 ### Performance notes
 - Parallel execution: Use `--jobs N` (agent and baseline) to reduce wall time; on a 16‑thread machine with 7 tasks, `--jobs 12–14` works well.
 - Benchmarks auto‑append: Full agent runs (`--limit 0`) are persisted to `BENCHMARKS.md` automatically; add context via `--bench-notes`.
-- More details and trade‑offs: see `speedup.plan`.
 
 ### Profiling
 - Agent: convert logs to a CSV profile (per-tool durations):

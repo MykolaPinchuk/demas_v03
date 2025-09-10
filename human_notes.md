@@ -24,10 +24,11 @@ Ask agents how to speed up runs. As we move to fancier tests, runs will take lon
 
 ### Few things to add:
 
-Openrouter api with qwen3-coder and maybe couple of otehr cheap models like gpt5-mini.
 
-Figure out whether I can use Vetrext with free tier for geminis.
+Figure out whether I can use Vertex with free tier for geminis.
 
-Make sure token usage is reported in results.
+Make sure token usage is reported in results. hard, tried once, abandoned.
+
+Retries. Make sure that models receive information which they need to improve in the next attempt.
 
 
