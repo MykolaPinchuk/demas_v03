@@ -41,6 +41,7 @@ Then open the newest `sandbox/agent_batch_runs/<ts>/summary.csv` and record:
 | 20250909_015648 | moonshotai/Kimi-Dev-72B | 0.00 | 4.003 | 5.065 | full model sweep (no OpenAI), temp=0 |
 | 20250909_022023 | moonshotai/Kimi-K2-Instruct-0905 | 0.57 | 28.09 | 30.138 | full suite auto-append |
 | 20250909_015323 | moonshotai/Kimi-K2-Instruct-75k | 0.57 | 29.178 | 40.891 | full model sweep (no OpenAI), temp=0 |
+| 20250910_010234 | openai/gpt-5-mini | 0.71 | 40.57 | 57.754 | full suite auto-append |
 | 20250909_021738 | unsloth/gemma-3-12b-it | 0.00 | 17.667 | 20.839 | full model sweep (no OpenAI), temp=0 |
 | 20250909_021357 | zai-org/GLM-4.5-Air | 0.57 | 31.814 | 46.456 | full model sweep (no OpenAI), temp=0 |
 | 20250909_022525 | zai-org/GLM-4.5-FP8 | 0.86 | 26.224 | 39.613 | full suite auto-append |
@@ -97,6 +98,8 @@ Then open the newest `sandbox/agent_batch_runs/<ts>/summary.csv` and record:
 | 20250909_022613 | zai-org/GLM-4.5-Air | 0.57 | 41.130 | 45.711 | full 7-task sweep (no OpenAI), jobs=12, temp=0 |
 | 20250909_022700 | unsloth/gemma-3-12b-it | 0.00 | 18.126 | 19.070 | full suite auto-append |
 | 20250909_022700 | unsloth/gemma-3-12b-it | 0.00 | 18.126 | 19.070 | full 7-task sweep (no OpenAI), jobs=12, temp=0 |
+| 20250910_010234 | openai/gpt-5-mini | 0.71 | 40.570 | 57.754 | full suite auto-append |
+| 20250910_010234 | openai/gpt-5-mini | 0.71 | 40.570 | 57.754 | full 7-task suite, OpenRouter gpt-5-mini, jobs=12, temp=0.2 |
 <!-- LOG_TABLE_END -->
 
 Notes:

@@ -41,7 +41,8 @@ This file is a knowledge transfer from old agents to new coding agents which wil
 - Tracked models: `demas/core/models.py` (`TRACKED_MODELS`).
 - Full sweep (all tracked models, parallel tasks, auto-append results, auto-normalize best per model when notes contain "full"):
 ```bash
-CHUTES_API_KEY=YOUR_KEY python -m demas.benchmarks.sweep \
+CHUTES_API_KEY=YOUR_KEY OPENROUTER_API_KEY=YOUR_OR_KEY \
+python -m demas.benchmarks.sweep \
   --seeds sandbox/swe_tasks.jsonl \
   --limit 0 \
   --jobs 12 \

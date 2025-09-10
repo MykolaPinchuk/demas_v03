@@ -65,7 +65,8 @@ python swebench_batch.py --seeds sandbox/swe_tasks.jsonl --agent
 ```
 Parallel agent batch (example with 12 workers):
 ```bash
-CHUTES_API_KEY=YOUR_KEY python swebench_batch.py --seeds sandbox/swe_tasks.jsonl --agent --jobs 12
+CHUTES_API_KEY=YOUR_KEY OPENROUTER_API_KEY=YOUR_OR_KEY \
+python swebench_batch.py --seeds sandbox/swe_tasks.jsonl --agent --jobs 12
 ```
 Notes:
 - `--jobs` applies to agent mode only. Baseline runs are sequential.
@@ -92,6 +93,7 @@ python -m demas.benchmarks.append --csv sandbox/agent_batch_runs/<timestamp>/sum
 ```
 - Run a full sweep of all tracked models (appends rows to `BENCHMARKS.md`). Include the word `full` in notes to add to the leaderboard; all runs are also logged below:
 ```bash
+CHUTES_API_KEY=YOUR_KEY OPENROUTER_API_KEY=YOUR_OR_KEY \
 python -m demas.benchmarks.sweep \
   --seeds sandbox/swe_tasks.jsonl \
   --limit 0 \

@@ -10,22 +10,22 @@ from typing import List
 
 # Consolidated from BENCHMARKS.md and prior runs
 TRACKED_MODELS: List[str] = [
-    # Kimi variants
+    # Kimi variants (Chutes)
     "moonshotai/Kimi-K2-Instruct-0905",
     "moonshotai/Kimi-K2-Instruct-75k",
     "moonshotai/Kimi-Dev-72B",
-    # DeepSeek
+    # DeepSeek (Chutes)
     "deepseek-ai/DeepSeek-V3.1",
     "deepseek-ai/DeepSeek-V3-0324",
-    # OpenAI OSS family (proxied via provider)
-    "openai/gpt-oss-120b",
-    "openai/gpt-oss-20b",
-    # Qwen
+    # Qwen (Chutes)
     "Qwen/Qwen3-Coder-480B-A35B-Instruct-FP8",
     "Qwen/Qwen3-Coder-30B-A3B-Instruct",
-    # Zhipu/GLM
+    # Zhipu/GLM (Chutes)
     "zai-org/GLM-4.5-FP8",
     "zai-org/GLM-4.5-Air",
+    # OpenRouter cheap models
+    "openai/gpt-5-mini",
+    "openai/gpt-oss-120b:free",
     # Others observed in logs
     "unsloth/gemma-3-12b-it",
 ]

@@ -21,11 +21,17 @@ from demas.core.docker_exec import run_docker_bash
 CHUTES_API_KEY  = os.environ.get("CHUTES_API_KEY")
 CHUTES_BASE_URL = os.environ.get("CHUTES_BASE_URL", "https://llm.chutes.ai/v1")
 
+# OpenRouter support (auto-routed for specific models)
+OPENROUTER_API_KEY  = os.environ.get("OPENROUTER_API_KEY")
+OPENROUTER_BASE_URL = os.environ.get("OPENROUTER_BASE_URL", "https://openrouter.ai/api/v1")
+
 MODEL_CANDIDATES: List[str] = [
+    # Prefer non-OpenAI models via Chutes first
     "moonshotai/Kimi-K2-Instruct-75k",
-    "openai/gpt-oss-120b",
     "deepseek-ai/DeepSeek-V3-0324",
-    "openai/gpt-oss-20b",
+    # OpenRouter cheap models (only used if OpenRouter key is set)
+    "openai/gpt-5-mini",
+    "openai/gpt-oss-120b:free",
 ]
 BASE_MODEL_INFO = {
     "vision": False, "function_calling": True,
@@ -58,7 +64,28 @@ LOG_DIR = os.path.join(RUN_BASE_DIR, "logs") if RUN_BASE_DIR else ""
 LOG_PATH = os.path.join(LOG_DIR, f"{TASK_ID or 'task'}.jsonl") if LOG_DIR else ""
 
 # ------------- model + preflight -------------
+def _provider_for_model(model_name: str) -> str:
+    name = (model_name or "").lower()
+    # Route any openai/* models to OpenRouter by default
+    if name.startswith("openai/"):
+        return "openrouter"
+    return "chutes"
+
+
 def make_client(model_name: str, *, temperature: float) -> OpenAIChatCompletionClient:
+    provider = _provider_for_model(model_name)
+    if provider == "openrouter":
+        if not OPENROUTER_API_KEY:
+            raise RuntimeError("OPENROUTER_API_KEY is not set but required for model '%s'" % model_name)
+        return OpenAIChatCompletionClient(
+            model=model_name,
+            api_key=OPENROUTER_API_KEY,
+            base_url=OPENROUTER_BASE_URL,
+            temperature=temperature,
+            include_name_in_message=True,
+            model_info=BASE_MODEL_INFO,
+        )
+    # Default provider: Chutes
     return OpenAIChatCompletionClient(
         model=model_name,
         api_key=CHUTES_API_KEY,
@@ -84,7 +111,11 @@ async def pick_ready_model() -> OpenAIChatCompletionClient:
     # If a specific model is requested, use it directly
     if MODEL_NAME:
         c = make_client(MODEL_NAME, temperature=MODEL_TEMPERATURE)
-        # Optional: quick preflight to validate creds
+        # Skip preflight for OpenRouter to avoid false negatives on stream quirks
+        if _provider_for_model(MODEL_NAME) == "openrouter":
+            print(f"[preflight] Skipping preflight; using OpenRouter model: {MODEL_NAME}")
+            return c
+        # For Chutes, keep a quick preflight
         ok = await preflight(c)
         if ok:
             print(f"[preflight] Using model: {MODEL_NAME}")
@@ -92,6 +123,9 @@ async def pick_ready_model() -> OpenAIChatCompletionClient:
         raise RuntimeError(f"Requested model not available: {MODEL_NAME}")
     for m in MODEL_CANDIDATES:
         c = make_client(m, temperature=MODEL_TEMPERATURE)
+        if _provider_for_model(m) == "openrouter":
+            print(f"[preflight] Skipping preflight; using OpenRouter model: {m}")
+            return c
         if await preflight(c):
             print(f"[preflight] Using model: {m}")
             return c
