@@ -93,7 +93,7 @@ def _parse_table_rows(section: str):
     return rows
 
 
-def normalize_leaderboard(md_path: str) -> None:
+def normalize_leaderboard(md_path: str, *, suite_marker: str | None = None) -> None:
     with open(md_path, "r", encoding="utf-8") as f:
         content = f.read()
     # Extract log section
@@ -104,8 +104,15 @@ def normalize_leaderboard(md_path: str) -> None:
         return
     log_section = content[log_start:log_end]
     all_rows = _parse_table_rows(log_section)
-    # Consider only rows whose notes contain 'full'
-    full_rows = [r for r in all_rows if "full" in (r.get("notes", "").lower())]
+    # Consider only rows whose notes contain 'full' and optional suite marker
+    def _is_target(r):
+        n = (r.get("notes", "").lower())
+        if "full" not in n:
+            return False
+        if suite_marker:
+            return suite_marker.lower() in n
+        return True
+    full_rows = [r for r in all_rows if _is_target(r)]
     # Select best per model: max pass_rate, tie-break min p50
     best_by_model = {}
     for r in full_rows:

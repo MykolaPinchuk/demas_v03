@@ -101,11 +101,16 @@ def main(argv: List[str]) -> int:
             agent_pass_rate = float(info.get("pass_rate", 0.0))
         except Exception:
             agent_pass_rate = 0.0
-        if agent_pass_rate > baseline_pass_rate:
+        # Always append for full-suite runs to enable apples-to-apples comparisons.
+        if "full" in (args.notes or '').lower():
             append_row("BENCHMARKS.md", ts, info.get("model", m), info.get("pass_rate", ""), info.get("p50", ""), info.get("p95", ""), args.notes)
-            print(f"Appended BENCHMARKS row for {m} @ {ts} (agent {agent_pass_rate:.2f} > baseline {baseline_pass_rate:.2f})")
+            print(f"Appended BENCHMARKS row for {m} @ {ts} (full-suite run)")
         else:
-            print(f"Skipped append for {m}: agent {agent_pass_rate:.2f} <= baseline {baseline_pass_rate:.2f}")
+            if agent_pass_rate > baseline_pass_rate:
+                append_row("BENCHMARKS.md", ts, info.get("model", m), info.get("pass_rate", ""), info.get("p50", ""), info.get("p95", ""), args.notes)
+                print(f"Appended BENCHMARKS row for {m} @ {ts} (agent {agent_pass_rate:.2f} > baseline {baseline_pass_rate:.2f})")
+            else:
+                print(f"Skipped append for {m}: agent {agent_pass_rate:.2f} <= baseline {baseline_pass_rate:.2f}")
     # Normalize leaderboard to best per model if notes indicate full suite
     try:
         if "full" in (args.notes or '').lower():

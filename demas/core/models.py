@@ -26,6 +26,7 @@ TRACKED_MODELS: List[str] = [
     # OpenRouter models
     "openai/gpt-5-mini",
     "openai/gpt-oss-120b",
+    "openai/r1-0528",
     # Others observed in logs
     "unsloth/gemma-3-12b-it",
 ]
