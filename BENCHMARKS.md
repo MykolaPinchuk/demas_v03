@@ -35,18 +35,18 @@ Then open the newest `sandbox/agent_batch_runs/<ts>/summary.csv` and record:
 | timestamp           | model                                      | pass_rate | p50_duration_s | p95_duration_s | notes |
 |---------------------|--------------------------------------------|-----------|----------------|----------------|-------|
 | 20250911_022627 | Qwen/Qwen3-Coder-30B-A3B-Instruct | 0.62 | 25.121 | 33.331 | full suite8, jobs=12, temp=0.2 |
-| 20250911_014635 | Qwen/Qwen3-Coder-480B-A35B-Instruct-FP8 | 0.88 | 19.52 | 42.094 | tokens=80 full 8-task suite, attempts=2, jobs=12, temp=0.2 |
-| 20250909_020102 | deepseek-ai/DeepSeek-V3-0324 | 0.00 | 21.419 | 24.55 | full model sweep (no OpenAI), temp=0 |
-| 20250909_015718 | deepseek-ai/DeepSeek-V3.1 | 0.71 | 23.382 | 40.764 | full model sweep (no OpenAI), temp=0 |
+| 20250911_022539 | Qwen/Qwen3-Coder-480B-A35B-Instruct-FP8 | 0.88 | 19.858 | 47.483 | full suite8, jobs=12, temp=0.2 |
+| 20250911_022514 | deepseek-ai/DeepSeek-V3-0324 | 0.00 | 21.788 | 24.457 | full suite8, jobs=12, temp=0.2 |
+| 20250911_022414 | deepseek-ai/DeepSeek-V3.1 | 0.50 | 15.4 | 42.783 | full suite8, jobs=12, temp=0.2 |
 | 20250911_022408 | moonshotai/Kimi-Dev-72B | 0.00 | 3.63 | 4.404 | full suite8, jobs=12, temp=0.2 |
-| 20250910_013413 | moonshotai/Kimi-K2-Instruct-0905 | 0.71 | 28.332 | 41.137 | tokens=0 full tokenized sweep (append only > baseline), jobs=12, temp=0.2 |
-| 20250909_015323 | moonshotai/Kimi-K2-Instruct-75k | 0.57 | 29.178 | 40.891 | full model sweep (no OpenAI), temp=0 |
-| 20250910_010234 | openai/gpt-5-mini | 0.71 | 40.57 | 57.754 | full suite auto-append |
-| 20250910_013752 | openai/gpt-oss-120b | 0.57 | 39.799 | 65.353 | tokens=0 full tokenized sweep (append only > baseline), jobs=12, temp=0.2 |
+| 20250911_022220 | moonshotai/Kimi-K2-Instruct-0905 | 0.50 | 23.706 | 48.55 | full suite8, jobs=12, temp=0.2 |
+| 20250911_022310 | moonshotai/Kimi-K2-Instruct-75k | 0.50 | 21.804 | 49.841 | full suite8, jobs=12, temp=0.2 |
+| 20250911_022838 | openai/gpt-5-mini | 0.50 | 16.761 | 42.235 | full suite8, jobs=12, temp=0.2 |
+| 20250911_022938 | openai/gpt-oss-120b | 0.50 | 14.957 | 18.909 | full suite8, jobs=12, temp=0.2 |
 | 20250911_023004 | openai/r1-0528 | 0.00 | 1.458 | 1.474 | full suite8, jobs=12, temp=0.2 |
 | 20250911_023006 | unsloth/gemma-3-12b-it | 0.00 | 15.489 | 16.79 | full suite8, jobs=12, temp=0.2 |
 | 20250911_022757 | zai-org/GLM-4.5-Air | 0.75 | 25.428 | 38.675 | full suite8, jobs=12, temp=0.2 |
-| 20250911_014435 | zai-org/GLM-4.5-FP8 | 0.88 | 24.101 | 26.57 | tokens=70 full 8-task suite, attempts=2, jobs=12, temp=0.2 |
+| 20250911_022709 | zai-org/GLM-4.5-FP8 | 0.75 | 20.485 | 29.614 | full suite8, jobs=12, temp=0.2 |
 <!-- MAIN_TABLE_END -->
 
 ### Run log (all runs)

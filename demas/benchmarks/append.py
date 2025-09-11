@@ -156,9 +156,10 @@ def main(argv: list[str]) -> int:
     p.add_argument("--notes", default="", help="Short notes to include in the row")
     p.add_argument("--md", default="BENCHMARKS.md", help="Markdown file to append to (default: BENCHMARKS.md)")
     p.add_argument("--normalize", action="store_true", help="Normalize leaderboard to best row per model (based on LOG table 'full' rows)")
+    p.add_argument("--suite-marker", default=None, help="Optional marker string (e.g., 'suite8') to filter rows during normalization")
     args = p.parse_args(argv)
     if args.normalize:
-        normalize_leaderboard(args.md)
+        normalize_leaderboard(args.md, suite_marker=args.suite_marker)
         print("Normalized leaderboard to best row per model.")
         return 0
     if not args.csv:
