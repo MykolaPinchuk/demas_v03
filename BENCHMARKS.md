@@ -35,7 +35,7 @@ Then open the newest `sandbox/agent_batch_runs/<ts>/summary.csv` and record:
 | timestamp           | model                                      | pass_rate | p50_duration_s | p95_duration_s | notes |
 |---------------------|--------------------------------------------|-----------|----------------|----------------|-------|
 | 20250909_020737 | Qwen/Qwen3-Coder-30B-A3B-Instruct | 0.57 | 25.625 | 37.475 | full model sweep (no OpenAI), temp=0 |
-| 20250911_002604 | Qwen/Qwen3-Coder-480B-A35B-Instruct-FP8 | 0.86 | 27.033 | 38.701 | tokens=70 full 7-task suite, jobs=12, temp=0.2 |
+| 20250911_014635 | Qwen/Qwen3-Coder-480B-A35B-Instruct-FP8 | 0.88 | 19.52 | 42.094 | tokens=80 full 8-task suite, attempts=2, jobs=12, temp=0.2 |
 | 20250909_020102 | deepseek-ai/DeepSeek-V3-0324 | 0.00 | 21.419 | 24.55 | full model sweep (no OpenAI), temp=0 |
 | 20250909_015718 | deepseek-ai/DeepSeek-V3.1 | 0.71 | 23.382 | 40.764 | full model sweep (no OpenAI), temp=0 |
 | 20250909_015648 | moonshotai/Kimi-Dev-72B | 0.00 | 4.003 | 5.065 | full model sweep (no OpenAI), temp=0 |
@@ -45,11 +45,7 @@ Then open the newest `sandbox/agent_batch_runs/<ts>/summary.csv` and record:
 | 20250910_013752 | openai/gpt-oss-120b | 0.57 | 39.799 | 65.353 | tokens=0 full tokenized sweep (append only > baseline), jobs=12, temp=0.2 |
 | 20250909_021738 | unsloth/gemma-3-12b-it | 0.00 | 17.667 | 20.839 | full model sweep (no OpenAI), temp=0 |
 | 20250909_021357 | zai-org/GLM-4.5-Air | 0.57 | 31.814 | 46.456 | full model sweep (no OpenAI), temp=0 |
-| 20250909_022525 | zai-org/GLM-4.5-FP8 | 0.86 | 26.224 | 39.613 | full suite auto-append |
-| 20250911_010034 | zai-org/GLM-4.5-FP8 | 0.86 | 33.271 | 51.496 | tokens=70 full 7-task suite, attempts=2, jobs=12, temp=0.2 |
-| 20250911_010322 | moonshotai/Kimi-K2-Instruct-0905 | 0.57 | 25.032 | 40.473 | tokens=50 full 7-task suite, attempts=2, jobs=12, temp=0.2 |
-| 20250911_014435 | zai-org/GLM-4.5-FP8 | 0.88 | 24.101 | 26.570 | tokens=70 full 8-task suite, attempts=2, jobs=12, temp=0.2 |
-| 20250911_014635 | Qwen/Qwen3-Coder-480B-A35B-Instruct-FP8 | 0.88 | 19.520 | 42.094 | tokens=80 full 8-task suite, attempts=2, jobs=12, temp=0.2 |
+| 20250911_014435 | zai-org/GLM-4.5-FP8 | 0.88 | 24.101 | 26.57 | tokens=70 full 8-task suite, attempts=2, jobs=12, temp=0.2 |
 <!-- MAIN_TABLE_END -->
 
 ### Run log (all runs)
@@ -116,6 +112,9 @@ Then open the newest `sandbox/agent_batch_runs/<ts>/summary.csv` and record:
 | 20250911_010322 | moonshotai/Kimi-K2-Instruct-0905 | 0.57 | 25.032 | 40.473 | tokens=50 full 7-task suite, attempts=2, jobs=12, temp=0.2 |
 | 20250911_014435 | zai-org/GLM-4.5-FP8 | 0.88 | 24.101 | 26.570 | tokens=70 full 8-task suite, attempts=2, jobs=12, temp=0.2 |
 | 20250911_014635 | Qwen/Qwen3-Coder-480B-A35B-Instruct-FP8 | 0.88 | 19.520 | 42.094 | tokens=80 full 8-task suite, attempts=2, jobs=12, temp=0.2 |
+| 20250911_021115 | moonshotai/Kimi-K2-Instruct-0905 | 0.50 | 28.538 | 30.118 | full 8-task suite, jobs=12, temp=0.2 |
+| 20250911_021205 | moonshotai/Kimi-K2-Instruct-75k | 0.50 | 22.355 | 41.288 | full 8-task suite, jobs=12, temp=0.2 |
+| 20250911_021312 | deepseek-ai/DeepSeek-V3.1 | 0.50 | 20.162 | 30.252 | full 8-task suite, jobs=12, temp=0.2 |
 <!-- LOG_TABLE_END -->
 
 Notes:

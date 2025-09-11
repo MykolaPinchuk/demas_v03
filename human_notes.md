@@ -31,4 +31,6 @@ Make sure token usage is reported in results. hard, tried once, abandoned.
 
 Retries. Make sure that models receive information which they need to improve in the next attempt.
 
+Add r1-0528 model.
+
 
