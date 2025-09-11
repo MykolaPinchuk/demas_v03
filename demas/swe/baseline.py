@@ -23,6 +23,7 @@ from datetime import datetime
 from typing import Optional, Tuple, Dict, Any
 from demas.core.docker_exec import run_docker_bash
 from demas.core import config as _cfg
+from demas.core.io import extract_pytest_tail
 
 
 DOCKER_IMAGE = _cfg.DOCKER_IMAGE
@@ -179,7 +180,7 @@ echo STAGE:TEST:END $(date +%s.%N)
                     t_markers[stage][kind.lower()] = ts
             except Exception:
                 pass
-    tail = after_tail or nonempty_tail(out) or nonempty_tail(err) or "(no output)"
+    tail = after_tail or extract_pytest_tail(out, err)
 
     status = "pass" if (" passed" in tail and " failed" not in tail and " error" not in tail) else ("fail" if code != 0 else "ok")
 

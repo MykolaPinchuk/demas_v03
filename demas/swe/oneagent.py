@@ -15,6 +15,7 @@ from autogen_agentchat.ui import Console
 from autogen_core.models import UserMessage
 from autogen_ext.models.openai import OpenAIChatCompletionClient
 from demas.core import config as _cfg
+from demas.core.io import extract_pytest_tail
 from demas.core.docker_exec import run_docker_bash
 
 # ---------------- config ----------------
@@ -282,16 +283,7 @@ async def swe_pytest_auto(*, pytest_args: str = "-q") -> str:
     )
     code, out, err = _docker(cmd)
     combined = (out or "") + ("\n" + err if err else "")
-    last = [ln for ln in (out or "").splitlines() if ln.strip()]
-    tail = last[-1] if last else ""
-    # Prefer a pytest summary line containing ' passed' if present, so the
-    # termination condition can trigger reliably even when -q prints progress
-    # lines like '...... [100%]' as the last line.
-    if (" passed" not in tail) and combined:
-        for _ln in reversed([ln.strip() for ln in combined.splitlines() if ln.strip()]):
-            if (" passed" in _ln) and (" failed" not in _ln) and (" error" not in _ln):
-                tail = _ln
-                break
+    tail = extract_pytest_tail(out, err)
 
     # Detect ModuleNotFoundError
     missing = None
@@ -345,9 +337,8 @@ async def swe_pytest_auto(*, pytest_args: str = "-q") -> str:
                 })
         # Re-run pytest and return the tail
         code2, out2, err2 = _docker(cmd)
-        last2 = [ln for ln in (out2 or "").splitlines() if ln.strip()]
-        tail2 = last2[-1] if last2 else ""
-        res = tail2 or (last[-1] if last else tail) or "(no stdout)"
+        tail2 = extract_pytest_tail(out2, err2)
+        res = tail2 or tail or "(no stdout)"
         _log_record({
             "timestamp": _now_iso(), "role": "tool", "content": "", "tool_name": "swe_pytest_auto",
             "tool_args": _redact({"pytest_args": pytest_args}),
@@ -391,8 +382,7 @@ async def swe_pytest(*, pytest_args: str = "-q") -> str:
         "model": MODEL_NAME or None, "temperature": MODEL_TEMPERATURE,
     })
     code, out, err = _docker(cmd)
-    last = [ln for ln in (out or "").splitlines() if ln.strip()]
-    tail = last[-1] if last else ""
+    tail = extract_pytest_tail(out, err)
     res = tail or "(no stdout)"
     _log_record({
         "timestamp": _now_iso(), "role": "tool", "content": "", "tool_name": "swe_pytest",
