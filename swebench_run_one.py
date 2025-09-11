@@ -40,31 +40,112 @@ def run_baseline(task: Dict[str, Any]) -> int:
     return 0
 
 
-def run_agent(task: Dict[str, Any], *, model: str, temperature: float, max_turns: int) -> int:
-    env = os.environ.copy()
-    env.setdefault("SWE_IMAGE", "swebench-lite:py3.10")
-    env["TARGET_REPO"] = task.get("repo", "")
-    env["TARGET_REF"] = task.get("ref", "")
-    env["PYTEST_K"] = task.get("pytest_k", "")
-    # per-task timeouts (centralized helper)
-    env = _cfg.apply_task_timeouts_to_env(env, task.get("timeouts", {}) or {})
-    # logging base dir
+def _build_attempt_hint(log_path: str, size_cap_bytes: int = 2048) -> str:
+    """Construct a concise hint from the prior attempt's agent log JSONL."""
+    tail = ""
+    diag = ""
+    missing = ""
+    patch = ""
+    try:
+        with open(log_path, "r", encoding="utf-8") as f:
+            for line in f:
+                line = line.strip()
+                if not line:
+                    continue
+                rec = json.loads(line)
+                tool = rec.get("tool_name")
+                role = rec.get("role", "")
+                content = rec.get("content") or ""
+                result = rec.get("tool_result") or ""
+                # capture last simple pytest tail
+                if tool in ("swe_pytest", "swe_pytest_auto") and role == "tool":
+                    tail = result
+                # capture last detailed diagnostics
+                if tool == "swe_pytest_full" and role == "tool":
+                    diag = result
+                # capture missing module note from assistant content
+                if role == "assistant" and "Detected missing module:" in content:
+                    missing = content
+                # capture patch apply outcome
+                if tool == "swe_apply_patch_text" and role == "tool":
+                    patch = result
+    except Exception:
+        pass
+    parts = []
+    if tail:
+        parts.append(f"last_tail: {tail}")
+    if missing:
+        parts.append(missing)
+    if patch:
+        parts.append(f"patch_result: {patch}")
+    if diag:
+        # keep diagnostics short
+        parts.append(f"diag: {diag}")
+    hint = " \n".join(parts)
+    if len(hint.encode("utf-8")) > size_cap_bytes:
+        # truncate by bytes
+        enc = hint.encode("utf-8")[:size_cap_bytes]
+        try:
+            hint = enc.decode("utf-8", errors="ignore") + "...<truncated>"
+        except Exception:
+            hint = hint[:512] + "...<truncated>"
+    return hint
+
+
+def run_agent(task: Dict[str, Any], *, model: str, temperature: float, max_turns: int, attempts: int, attempt_cap_s: int) -> int:
     from datetime import datetime
+    # Base timestamped directory for this single-task run
     ts = datetime.utcnow().strftime("%Y%m%d_%H%M%S")
-    out_dir = os.path.join(ROOT, "sandbox", "agent_batch_runs", ts)
-    os.makedirs(os.path.join(out_dir, "logs"), exist_ok=True)
-    env["RUN_BASE_DIR"] = out_dir
-    env["TASK_ID"] = task.get("task_id", "single")
-    # model config
-    if model:
-        env["MODEL_NAME"] = model
-    if temperature is not None:
-        env["MODEL_TEMPERATURE"] = str(temperature)
-    if max_turns:
-        env["MAX_TURNS"] = str(int(max_turns))
-    if not env.get("CHUTES_API_KEY"):
-        raise SystemExit("CHUTES_API_KEY not set")
-    subprocess.run([sys.executable, "-m", "demas.swe.oneagent"], env=env, check=False)
+    base_dir = os.path.join(ROOT, "sandbox", "agent_batch_runs", ts)
+    os.makedirs(base_dir, exist_ok=True)
+
+    last_hint = ""
+    # Attempts loop
+    attempts_n = max(1, int(attempts))
+    for k in range(1, attempts_n + 1):
+        env = os.environ.copy()
+        env.setdefault("SWE_IMAGE", "swebench-lite:py3.10")
+        env["TARGET_REPO"] = task.get("repo", "")
+        env["TARGET_REF"] = task.get("ref", "")
+        env["PYTEST_K"] = task.get("pytest_k", "")
+        env = _cfg.apply_task_timeouts_to_env(env, task.get("timeouts", {}) or {})
+        # attempt-specific dir and logs
+        attempt_dir = os.path.join(base_dir, f"attempt_{k}")
+        os.makedirs(os.path.join(attempt_dir, "logs"), exist_ok=True)
+        env["RUN_BASE_DIR"] = attempt_dir
+        env["TASK_ID"] = task.get("task_id", "single")
+        # model config
+        if model:
+            env["MODEL_NAME"] = model
+        if temperature is not None:
+            env["MODEL_TEMPERATURE"] = str(temperature)
+        if max_turns:
+            env["MAX_TURNS"] = str(int(max_turns))
+        # pass hint if any
+        if last_hint:
+            env["ATTEMPT_HINT"] = last_hint
+        if not env.get("CHUTES_API_KEY"):
+            raise SystemExit("CHUTES_API_KEY not set")
+        try:
+            p = subprocess.run([sys.executable, "-m", "demas.swe.oneagent"], env=env, check=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, timeout=max(1, int(attempt_cap_s)))
+            out = p.stdout or ""
+        except subprocess.TimeoutExpired as e:
+            out = (e.stdout or "") + "\n(timeout)"
+        # Determine pass from stdout tail heuristics
+        tail = ""
+        for ln in (out or "").splitlines()[::-1]:
+            ln = ln.strip()
+            if not ln:
+                continue
+            if ("passed" in ln) or ("failed" in ln) or ("error" in ln) or ("no tests ran" in ln):
+                tail = ln
+                break
+        passed = (" passed" in tail and " failed" not in tail and " error" not in tail)
+        if passed:
+            break
+        # Build hint for next attempt from the log file
+        log_path = os.path.join(attempt_dir, "logs", f"{task.get('task_id','single')}.jsonl")
+        last_hint = _build_attempt_hint(log_path, size_cap_bytes=2048)
     return 0
 
 
@@ -100,6 +181,8 @@ def main(argv: list[str]) -> int:
         type=int,
         default=int(os.environ.get("MAX_TURNS", "10")),
         help="Maximum agent turns before termination (default from env MAX_TURNS or 10)")
+    parser.add_argument("--attempts", type=int, default=1, help="Maximum number of fresh agent attempts (default: 1)")
+    parser.add_argument("--attempt-cap-s", type=int, default=60, help="Per-attempt wall-clock cap in seconds (default: 60)")
     args = parser.parse_args(argv)
 
     # Try local tasks first; if not found, try adapter input
@@ -113,7 +196,7 @@ def main(argv: list[str]) -> int:
             raise
         task = found[0]
     if args.agent:
-        return run_agent(task, model=args.model, temperature=args.temperature, max_turns=args.max_turns)
+        return run_agent(task, model=args.model, temperature=args.temperature, max_turns=args.max_turns, attempts=args.attempts, attempt_cap_s=args.attempt_cap_s)
     else:
         return run_baseline(task)
 

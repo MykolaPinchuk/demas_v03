@@ -58,7 +58,53 @@ def run_baseline_for_task(task: Dict[str, Any]) -> Dict[str, Any]:
         return {"task_id": task_id, "error": f"result_read_failed: {e}"}
 
 
-def run_agent_for_task(task: Dict[str, Any], *, out_dir: str, model: str, temperature: float, max_turns: int) -> Dict[str, Any]:
+def _build_attempt_hint(log_path: str, size_cap_bytes: int = 2048) -> str:
+    """Construct a concise hint from the prior attempt's agent log JSONL."""
+    tail = ""
+    diag = ""
+    missing = ""
+    patch = ""
+    try:
+        with open(log_path, "r", encoding="utf-8") as f:
+            for line in f:
+                line = line.strip()
+                if not line:
+                    continue
+                rec = json.loads(line)
+                tool = rec.get("tool_name")
+                role = rec.get("role", "")
+                content = rec.get("content") or ""
+                result = rec.get("tool_result") or ""
+                if tool in ("swe_pytest", "swe_pytest_auto") and role == "tool":
+                    tail = result
+                if tool == "swe_pytest_full" and role == "tool":
+                    diag = result
+                if role == "assistant" and "Detected missing module:" in content:
+                    missing = content
+                if tool == "swe_apply_patch_text" and role == "tool":
+                    patch = result
+    except Exception:
+        pass
+    parts = []
+    if tail:
+        parts.append(f"last_tail: {tail}")
+    if missing:
+        parts.append(missing)
+    if patch:
+        parts.append(f"patch_result: {patch}")
+    if diag:
+        parts.append(f"diag: {diag}")
+    hint = " \n".join(parts)
+    if len(hint.encode("utf-8")) > size_cap_bytes:
+        enc = hint.encode("utf-8")[:size_cap_bytes]
+        try:
+            hint = enc.decode("utf-8", errors="ignore") + "...<truncated>"
+        except Exception:
+            hint = hint[:512] + "...<truncated>"
+    return hint
+
+
+def run_agent_for_task(task: Dict[str, Any], *, out_dir: str, model: str, temperature: float, max_turns: int, attempts: int, attempt_cap_s: int) -> Dict[str, Any]:
     env = os.environ.copy()
     env.setdefault("SWE_IMAGE", "swebench-lite:py3.10")
     env["TARGET_REPO"] = task.get("repo", "")
@@ -80,55 +126,90 @@ def run_agent_for_task(task: Dict[str, Any], *, out_dir: str, model: str, temper
             env["TIMEOUT_INSTALL"] = str(int(to["install"]))
         if to.get("test"):
             env["TIMEOUT_TEST"] = str(int(to["test"]))
-    # Logging config
-    env["RUN_BASE_DIR"] = out_dir
-    env["TASK_ID"] = task.get("task_id", "")
-
-    t0 = time.time()
-    p = subprocess.run(
-        [sys.executable, "-m", "demas.swe.oneagent"],
-        stdout=subprocess.PIPE,
-        stderr=subprocess.STDOUT,
-        text=True,
-        env=env,
-    )
-    dt = time.time() - t0
-    out = p.stdout or ""
-    # Heuristic: last pytest tail appears as e.g. "X passed in Ys" on a line by itself
-    tail = ""
+    # Attempts loop with per-attempt cap and hint propagation
+    attempts_n = max(1, int(attempts))
     model_used = model or ""
-    for ln in out.splitlines()[::-1]:
-        ln = ln.strip()
-        if not ln:
-            continue
-        if "passed" in ln or "failed" in ln or "error" in ln:
-            tail = ln
-            break
-    # Try to detect model used from preflight output if available
-    for ln in out.splitlines():
-        if ln.strip().startswith("[preflight] Using model:"):
-            try:
-                model_used = ln.split(":", 1)[1].strip()
-            except Exception:
-                pass
-    status = "pass" if " passed" in tail and " failed" not in tail and " error" not in tail else "fail"
+    start_overall = time.time()
+    last_hint = ""
+    last_tail = ""
+    for k in range(1, attempts_n + 1):
+        env_k = env.copy()
+        attempt_dir = os.path.join(out_dir, f"attempt_{k}")
+        os.makedirs(os.path.join(attempt_dir, "logs"), exist_ok=True)
+        env_k["RUN_BASE_DIR"] = attempt_dir
+        env_k["TASK_ID"] = task.get("task_id", "")
+        if last_hint:
+            env_k["ATTEMPT_HINT"] = last_hint
+        t0 = time.time()
+        try:
+            p = subprocess.run(
+                [sys.executable, "-m", "demas.swe.oneagent"],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
+                text=True,
+                env=env_k,
+                timeout=max(1, int(attempt_cap_s)),
+            )
+            out = p.stdout or ""
+        except subprocess.TimeoutExpired as e:
+            out = (e.stdout or "") + "\n(timeout)"
+        dt_k = time.time() - t0
+        # Determine tail
+        tail = ""
+        for ln in out.splitlines()[::-1]:
+            ln = ln.strip()
+            if not ln:
+                continue
+            if "passed" in ln or "failed" in ln or "error" in ln or "no tests ran" in ln:
+                tail = ln
+                break
+        last_tail = tail or last_tail
+        # Model detection (first available)
+        if not model_used:
+            for ln in out.splitlines():
+                if ln.strip().startswith("[preflight] Using model:"):
+                    try:
+                        model_used = ln.split(":", 1)[1].strip()
+                    except Exception:
+                        pass
+                    break
+        passed = (" passed" in tail and " failed" not in tail and " error" not in tail)
+        if passed:
+            total_dt = time.time() - start_overall
+            return {
+                "task_id": task.get("task_id", ""),
+                "repo": task.get("repo", ""),
+                "ref": task.get("ref", ""),
+                "pytest_k": task.get("pytest_k", ""),
+                "status": "pass",
+                "duration_s": round(total_dt, 3),
+                "tail": tail,
+                "model": model_used,
+                "temperature": temperature,
+                "max_turns": max_turns,
+            }
+        # Build hint for next attempt
+        log_path = os.path.join(attempt_dir, "logs", f"{task.get('task_id','')}.jsonl")
+        last_hint = _build_attempt_hint(log_path, size_cap_bytes=2048)
+    # All attempts failed
+    total_dt = time.time() - start_overall
     return {
         "task_id": task.get("task_id", ""),
         "repo": task.get("repo", ""),
         "ref": task.get("ref", ""),
         "pytest_k": task.get("pytest_k", ""),
-        "status": status,
-        "duration_s": round(dt, 3),
-        "tail": tail,
+        "status": "fail",
+        "duration_s": round(total_dt, 3),
+        "tail": last_tail,
         "model": model_used,
         "temperature": temperature,
         "max_turns": max_turns,
     }
 
 
-def _run_single_task(task: Dict[str, Any], *, agent: bool, out_dir: str, model: str, temperature: float, max_turns: int) -> Tuple[Dict[str, Any], str]:
+def _run_single_task(task: Dict[str, Any], *, agent: bool, out_dir: str, model: str, temperature: float, max_turns: int, attempts: int, attempt_cap_s: int) -> Tuple[Dict[str, Any], str]:
     if agent:
-        res = run_agent_for_task(task, out_dir=out_dir, model=model, temperature=temperature, max_turns=max_turns)
+        res = run_agent_for_task(task, out_dir=out_dir, model=model, temperature=temperature, max_turns=max_turns, attempts=attempts, attempt_cap_s=attempt_cap_s)
     else:
         # Ensure unique timestamp per baseline task to avoid collisions
         os.environ["RUN_TS"] = datetime.utcnow().strftime("%Y%m%d_%H%M%S_%f")
@@ -147,6 +228,8 @@ def main(argv: List[str]) -> int:
     parser.add_argument("--temperature", type=float, default=float(os.environ.get("MODEL_TEMPERATURE", "0.2")), help="Sampling temperature (env MODEL_TEMPERATURE default)")
     parser.add_argument("--max-turns", dest="max_turns", type=int, default=int(os.environ.get("MAX_TURNS", "10")), help="Maximum agent turns (env MAX_TURNS default)")
     parser.add_argument("--jobs", type=int, default=0, help="Parallel jobs for both modes (0 or negative = auto; default: auto)")
+    parser.add_argument("--attempts", type=int, default=1, help="Agent attempts per task (fresh runs). Default 1")
+    parser.add_argument("--attempt-cap-s", type=int, default=60, help="Per-attempt wall-clock cap in seconds (default: 60)")
     parser.add_argument("--bench-notes", default=os.environ.get("BENCH_NOTES", ""), help="Optional notes to include when auto-appending full-suite agent results to BENCHMARKS.md (include 'full' to appear on leaderboard)")
     parser.add_argument("--no-auto-append", action="store_true", help="Disable auto-append to BENCHMARKS.md even for full agent runs")
     args = parser.parse_args(argv)
@@ -190,7 +273,7 @@ def main(argv: List[str]) -> int:
             workers = max(1, args.jobs)
             with ThreadPoolExecutor(max_workers=workers) as ex:
                 future_to_task = {
-                    ex.submit(_run_single_task, task, agent=args.agent, out_dir=out_dir, model=args.model, temperature=args.temperature, max_turns=args.max_turns): task
+                    ex.submit(_run_single_task, task, agent=args.agent, out_dir=out_dir, model=args.model, temperature=args.temperature, max_turns=args.max_turns, attempts=args.attempts, attempt_cap_s=args.attempt_cap_s): task
                     for task in tasks
                 }
                 for fut in as_completed(future_to_task):
@@ -206,7 +289,7 @@ def main(argv: List[str]) -> int:
         else:
             # Sequential (baseline or single-job agent)
             for task in tasks:
-                res, msg = _run_single_task(task, agent=args.agent, out_dir=out_dir, model=args.model, temperature=args.temperature, max_turns=args.max_turns)
+                res, msg = _run_single_task(task, agent=args.agent, out_dir=out_dir, model=args.model, temperature=args.temperature, max_turns=args.max_turns, attempts=args.attempts, attempt_cap_s=args.attempt_cap_s)
                 outf.write(json.dumps(res) + "\n")
                 outf.flush()
                 print(msg)

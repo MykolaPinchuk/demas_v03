@@ -17,3 +17,4 @@
 - Do not ask the user for the key. Never print or echo the key in logs or console.
 - Be direct and clear. 
 - Human use is 'he', not 'they'.
+- Keep count of lines of code among files outside .cursorignore below 4,000.

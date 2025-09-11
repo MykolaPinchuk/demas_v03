@@ -63,6 +63,7 @@ TASK_ID = os.environ.get("TASK_ID", "")
 RUN_ID = str(uuid.uuid4())
 LOG_DIR = os.path.join(RUN_BASE_DIR, "logs") if RUN_BASE_DIR else ""
 LOG_PATH = os.path.join(LOG_DIR, f"{TASK_ID or 'task'}.jsonl") if LOG_DIR else ""
+ATTEMPT_HINT = os.environ.get("ATTEMPT_HINT", "").strip()
 
 # ------------- model + preflight -------------
 def _provider_for_model(model_name: str) -> str:
@@ -566,6 +567,8 @@ async def main():
     team = RoundRobinGroupChat([runner], termination_condition=term)
 
     kline = f'-k "{PYTEST_K}"' if PYTEST_K else ""
+    # Optional hint from previous attempt to guide this run
+    hint_block = ("\n\nPrevious attempt summary (brief):\n" + ATTEMPT_HINT + "\n") if ATTEMPT_HINT else ""
     task = f"""
 You are a code-fixing agent working inside a clean Docker container.
 Use ONLY the provided tools. Keep outputs minimal.
@@ -580,7 +583,7 @@ Steps:
 
 CRITICAL OUTPUT RULE:
 When you run tests (step 3 or after patch), paste ONLY the exact string returned by swe_pytest (the last non-empty pytest stdout line). No extra words.
-"""
+{hint_block}"""
 
     t0 = time.time()
     # initial log record
