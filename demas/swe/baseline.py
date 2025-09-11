@@ -137,14 +137,18 @@ fi
 echo STAGE:CLONE:END $(date +%s.%N)
 
 echo STAGE:INSTALL:START $(date +%s.%N)
-python -m pip install -q -U pip
+python -m pip install -q -U pip || true
 # Common build backends used by modern projects
-timeout 10s python -m pip install -q hatchling hatch-vcs || true
-# Editable install of the project (fast fail if not needed)
-timeout {TIMEOUT_INSTALL}s python -m pip install -q -e . || true
+timeout 10s python -m pip install -q hatchling hatch-vcs meson-python ninja cython setuptools_scm || true
+# Editable install of the project; fallback to regular install if needed
+timeout {TIMEOUT_INSTALL}s python -m pip install -q -e . || timeout {TIMEOUT_INSTALL}s python -m pip install -q . || true
+# Root requirements if present
+if [ -f requirements.txt ]; then \
+  timeout {TIMEOUT_INSTALL}s python -m pip install -q -r requirements.txt || true; \
+fi
 # Project-specific test requirements if present
 if [ -f testing/requirements.txt ]; then \
-  timeout {TIMEOUT_INSTALL}s python -m pip install -q -r testing/requirements.txt; \
+  timeout {TIMEOUT_INSTALL}s python -m pip install -q -r testing/requirements.txt || true; \
 fi
 # dateutil zoneinfo tarball generation if missing (tests expect packaged DB)
 if [ -d src/dateutil/zoneinfo ]; then \

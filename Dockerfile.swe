@@ -4,4 +4,9 @@ WORKDIR /workspace
 
 # Speed-focused preinstalls to avoid slow wheels at runtime
 RUN python -m pip install -U pip && \
-    python -m pip install -U pytest numpy pandas
+    python -m pip install -U \
+      pytest numpy pandas \
+      wheel setuptools setuptools_scm \
+      hatchling hatch-vcs \
+      meson-python ninja cython \
+      hypothesis freezegun mock

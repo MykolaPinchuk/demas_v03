@@ -48,6 +48,8 @@ Then open the newest `sandbox/agent_batch_runs/<ts>/summary.csv` and record:
 | 20250909_022525 | zai-org/GLM-4.5-FP8 | 0.86 | 26.224 | 39.613 | full suite auto-append |
 | 20250911_010034 | zai-org/GLM-4.5-FP8 | 0.86 | 33.271 | 51.496 | tokens=70 full 7-task suite, attempts=2, jobs=12, temp=0.2 |
 | 20250911_010322 | moonshotai/Kimi-K2-Instruct-0905 | 0.57 | 25.032 | 40.473 | tokens=50 full 7-task suite, attempts=2, jobs=12, temp=0.2 |
+| 20250911_014435 | zai-org/GLM-4.5-FP8 | 0.88 | 24.101 | 26.570 | tokens=70 full 8-task suite, attempts=2, jobs=12, temp=0.2 |
+| 20250911_014635 | Qwen/Qwen3-Coder-480B-A35B-Instruct-FP8 | 0.88 | 19.520 | 42.094 | tokens=80 full 8-task suite, attempts=2, jobs=12, temp=0.2 |
 <!-- MAIN_TABLE_END -->
 
 ### Run log (all runs)
@@ -112,6 +114,8 @@ Then open the newest `sandbox/agent_batch_runs/<ts>/summary.csv` and record:
 | 20250911_002758 | moonshotai/Kimi-K2-Instruct-0905 | 0.57 | 28.725 | 45.812 | tokens=70 full 7-task suite, jobs=12, temp=0.2 |
 | 20250911_010034 | zai-org/GLM-4.5-FP8 | 0.86 | 33.271 | 51.496 | tokens=70 full 7-task suite, attempts=2, jobs=12, temp=0.2 |
 | 20250911_010322 | moonshotai/Kimi-K2-Instruct-0905 | 0.57 | 25.032 | 40.473 | tokens=50 full 7-task suite, attempts=2, jobs=12, temp=0.2 |
+| 20250911_014435 | zai-org/GLM-4.5-FP8 | 0.88 | 24.101 | 26.570 | tokens=70 full 8-task suite, attempts=2, jobs=12, temp=0.2 |
+| 20250911_014635 | Qwen/Qwen3-Coder-480B-A35B-Instruct-FP8 | 0.88 | 19.520 | 42.094 | tokens=80 full 8-task suite, attempts=2, jobs=12, temp=0.2 |
 <!-- LOG_TABLE_END -->
 
 Notes:
