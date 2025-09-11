@@ -242,6 +242,13 @@ async def swe_install(*, req_file: str = "requirements.txt") -> str:
         # If meson build artifacts exist, copy compiled .so into package dir to persist
         "if [ -d build ]; then so=$(find build -name '*_cfinancial*.so' | head -n1); "
         "if [ -n \"$so\" ]; then cp -f \"$so\" numpy_financial/; fi; fi && "
+        # dateutil zoneinfo tarball generation if missing (tests expect packaged DB)
+        "if [ -d src/dateutil/zoneinfo ]; then "
+        "  if [ ! -f src/dateutil/zoneinfo/dateutil-zoneinfo.tar.gz ]; then "
+        "    timeout 10s python updatezinfo.py || true; "
+        "    if [ -f dateutil/zoneinfo/dateutil-zoneinfo.tar.gz ]; then cp -f dateutil/zoneinfo/dateutil-zoneinfo.tar.gz src/dateutil/zoneinfo/; fi; "
+        "  fi; "
+        "fi && "
         f"if [ -f {shlex.quote(req_file)} ]; then timeout {TIMEOUT_INSTALL}s python -m pip install -q -r {shlex.quote(req_file)}; else echo 'no requirements.txt'; fi && "
         # testing requirements if present
         f"if [ -f testing/requirements.txt ]; then timeout {TIMEOUT_INSTALL}s python -m pip install -q -r testing/requirements.txt; else echo 'no testing/requirements.txt'; fi"

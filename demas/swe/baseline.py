@@ -146,6 +146,13 @@ timeout {TIMEOUT_INSTALL}s python -m pip install -q -e . || true
 if [ -f testing/requirements.txt ]; then \
   timeout {TIMEOUT_INSTALL}s python -m pip install -q -r testing/requirements.txt; \
 fi
+# dateutil zoneinfo tarball generation if missing (tests expect packaged DB)
+if [ -d src/dateutil/zoneinfo ]; then \
+  if [ ! -f src/dateutil/zoneinfo/dateutil-zoneinfo.tar.gz ]; then \
+    timeout 10s python updatezinfo.py || true; \
+    if [ -f dateutil/zoneinfo/dateutil-zoneinfo.tar.gz ]; then cp -f dateutil/zoneinfo/dateutil-zoneinfo.tar.gz src/dateutil/zoneinfo/; fi; \
+  fi; \
+fi
 echo STAGE:INSTALL:END $(date +%s.%N)
 
 # Optional pre-patch run
