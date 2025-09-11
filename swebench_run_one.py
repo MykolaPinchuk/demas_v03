@@ -34,16 +34,8 @@ def run_baseline(task: Dict[str, Any]) -> int:
         with open(patch_path, "wb") as pf:
             pf.write(base64.b64decode(task["patch_b64"]))
         args += ["--patch-file", patch_path, "--pre-patch-run"]
-    # Per-task timeouts via env
-    env = os.environ.copy()
-    to = task.get("timeouts", {}) or {}
-    if isinstance(to, dict):
-        if to.get("clone"):
-            env["TIMEOUT_CLONE"] = str(int(to["clone"]))
-        if to.get("install"):
-            env["TIMEOUT_INSTALL"] = str(int(to["install"]))
-        if to.get("test"):
-            env["TIMEOUT_TEST"] = str(int(to["test"]))
+    # Per-task timeouts via env (centralized helper)
+    env = _cfg.apply_task_timeouts_to_env(os.environ.copy(), task.get("timeouts", {}) or {})
     subprocess.run(args, check=False, env=env)
     return 0
 
@@ -54,15 +46,8 @@ def run_agent(task: Dict[str, Any], *, model: str, temperature: float, max_turns
     env["TARGET_REPO"] = task.get("repo", "")
     env["TARGET_REF"] = task.get("ref", "")
     env["PYTEST_K"] = task.get("pytest_k", "")
-    # per-task timeouts
-    to = task.get("timeouts", {}) or {}
-    if isinstance(to, dict):
-        if to.get("clone"):
-            env["TIMEOUT_CLONE"] = str(int(to["clone"]))
-        if to.get("install"):
-            env["TIMEOUT_INSTALL"] = str(int(to["install"]))
-        if to.get("test"):
-            env["TIMEOUT_TEST"] = str(int(to["test"]))
+    # per-task timeouts (centralized helper)
+    env = _cfg.apply_task_timeouts_to_env(env, task.get("timeouts", {}) or {})
     # logging base dir
     from datetime import datetime
     ts = datetime.utcnow().strftime("%Y%m%d_%H%M%S")

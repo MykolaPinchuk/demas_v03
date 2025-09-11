@@ -53,3 +53,24 @@ TIMEOUT_INSTALL = int(os.environ.get("TIMEOUT_INSTALL", "20"))
 TIMEOUT_TEST = int(os.environ.get("TIMEOUT_TEST", "5"))
 
 
+def apply_task_timeouts_to_env(env: dict, timeouts: object) -> dict:
+    """Apply per-task timeout overrides into an environment dict.
+
+    This is a behavior-preserving helper that centralizes the mapping from a task's
+    timeouts field {clone, install, test} into TIMEOUT_* env vars used by runners.
+    """
+    try:
+        to = timeouts or {}
+        if isinstance(to, dict):
+            if to.get("clone"):
+                env["TIMEOUT_CLONE"] = str(int(to["clone"]))
+            if to.get("install"):
+                env["TIMEOUT_INSTALL"] = str(int(to["install"]))
+            if to.get("test"):
+                env["TIMEOUT_TEST"] = str(int(to["test"]))
+    except Exception:
+        # Best-effort; ignore invalid overrides
+        pass
+    return env
+
+
