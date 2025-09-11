@@ -35,7 +35,7 @@ Then open the newest `sandbox/agent_batch_runs/<ts>/summary.csv` and record:
 | timestamp           | model                                      | pass_rate | p50_duration_s | p95_duration_s | notes |
 |---------------------|--------------------------------------------|-----------|----------------|----------------|-------|
 | 20250909_020737 | Qwen/Qwen3-Coder-30B-A3B-Instruct | 0.57 | 25.625 | 37.475 | full model sweep (no OpenAI), temp=0 |
-| 20250909_022337 | Qwen/Qwen3-Coder-480B-A35B-Instruct-FP8 | 0.86 | 31.767 | 52.043 | full suite auto-append |
+| 20250911_002604 | Qwen/Qwen3-Coder-480B-A35B-Instruct-FP8 | 0.86 | 27.033 | 38.701 | tokens=70 full 7-task suite, jobs=12, temp=0.2 |
 | 20250909_020102 | deepseek-ai/DeepSeek-V3-0324 | 0.00 | 21.419 | 24.55 | full model sweep (no OpenAI), temp=0 |
 | 20250909_015718 | deepseek-ai/DeepSeek-V3.1 | 0.71 | 23.382 | 40.764 | full model sweep (no OpenAI), temp=0 |
 | 20250909_015648 | moonshotai/Kimi-Dev-72B | 0.00 | 4.003 | 5.065 | full model sweep (no OpenAI), temp=0 |
@@ -105,6 +105,9 @@ Then open the newest `sandbox/agent_batch_runs/<ts>/summary.csv` and record:
 | 20250910_010856 | openai/gpt-oss-120b | 0.57 | 46.890 | 72.806 | full 7-task suite, OpenRouter gpt-oss-120b, jobs=12, temp=0.2 |
 | 20250910_013413 | moonshotai/Kimi-K2-Instruct-0905 | 0.71 | 28.332 | 41.137 | tokens=0 full tokenized sweep (append only > baseline), jobs=12, temp=0.2 |
 | 20250910_013752 | openai/gpt-oss-120b | 0.57 | 39.799 | 65.353 | tokens=0 full tokenized sweep (append only > baseline), jobs=12, temp=0.2 |
+| 20250911_002604 | Qwen/Qwen3-Coder-480B-A35B-Instruct-FP8 | 0.86 | 27.033 | 38.701 | tokens=70 full 7-task suite, jobs=12, temp=0.2 |
+| 20250911_002700 | zai-org/GLM-4.5-FP8 | 0.86 | 30.104 | 41.006 | tokens=70 full 7-task suite, jobs=12, temp=0.2 |
+| 20250911_002758 | moonshotai/Kimi-K2-Instruct-0905 | 0.57 | 28.725 | 45.812 | tokens=70 full 7-task suite, jobs=12, temp=0.2 |
 <!-- LOG_TABLE_END -->
 
 Notes:
