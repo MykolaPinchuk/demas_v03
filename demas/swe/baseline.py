@@ -151,6 +151,12 @@ if [ -d src/dateutil/zoneinfo ]; then \
   if [ ! -f src/dateutil/zoneinfo/dateutil-zoneinfo.tar.gz ]; then \
     timeout 10s python updatezinfo.py || true; \
     if [ -f dateutil/zoneinfo/dateutil-zoneinfo.tar.gz ]; then cp -f dateutil/zoneinfo/dateutil-zoneinfo.tar.gz src/dateutil/zoneinfo/; fi; \
+    if [ ! -f src/dateutil/zoneinfo/dateutil-zoneinfo.tar.gz ]; then \
+      mkdir -p /workspace/_deps_tmp && \
+      timeout 15s python -m pip download -q python-dateutil -d /workspace/_deps_tmp || true; \
+      python - <<'PY' || true\nimport zipfile,sys\nfrom pathlib import Path\nwhl = next(iter(Path('/workspace/_deps_tmp').glob('python_dateutil-*.whl')), None)\nif whl:\n    with zipfile.ZipFile(str(whl),'r') as z:\n        try:\n            z.extract('dateutil/zoneinfo/dateutil-zoneinfo.tar.gz','/workspace/_deps_tmp')\n        except Exception:\n            pass\nPY\n; \
+      if [ -f /workspace/_deps_tmp/dateutil/zoneinfo/dateutil-zoneinfo.tar.gz ]; then cp -f /workspace/_deps_tmp/dateutil/zoneinfo/dateutil-zoneinfo.tar.gz src/dateutil/zoneinfo/; fi; \
+    fi; \
   fi; \
 fi
 echo STAGE:INSTALL:END $(date +%s.%N)
