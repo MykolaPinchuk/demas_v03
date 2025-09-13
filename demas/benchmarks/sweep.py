@@ -69,6 +69,7 @@ def main(argv: List[str]) -> int:
     ap.add_argument("--temperature", type=float, default=DEFAULT_TEMPERATURE, help="Sampling temperature for all models (default from registry)")
     ap.add_argument("--jobs", type=int, default=12, help="Parallel jobs per model for task runs (agent mode)")
     ap.add_argument("--chutes-only", action="store_true", help="Evaluate only models routed via Chutes (exclude openai/* which go to OpenRouter)")
+    ap.add_argument("--attempts-mode", choices=["1","2","both"], default="both", help="Whether to run attempts=1, attempts=2, or both (default: both)")
     args = ap.parse_args(argv)
 
     if not os.environ.get("CHUTES_API_KEY"):
@@ -97,38 +98,45 @@ def main(argv: List[str]) -> int:
     print(f"Sweeping {len(models)} models...")
     for m in models:
         print(f"\n=== Model: {m} ===")
-        # Run attempts=1 and attempts=2 to compute both pass rates
-        csv1 = run_agent_batch(args.seeds, args.limit, m, temperature=args.temperature, jobs=args.jobs, attempts=1)
-        info1 = parse_csv(csv1)
-        ts1 = derive_timestamp(csv1)
-        csv2 = run_agent_batch(args.seeds, args.limit, m, temperature=args.temperature, jobs=args.jobs, attempts=2)
-        info2 = parse_csv(csv2)
-        ts2 = derive_timestamp(csv2)
-        # Use the latest timestamp (attempts=2) for the row, but include pass_rate (1-attempt) and pass_rate_2_attempts
-        ts = ts2 or ts1
-        pr1 = info1.get("pass_rate", "")
-        pr2 = info2.get("pass_rate", "")
-        p50 = info2.get("p50", "")
-        p95 = info2.get("p95", "")
-        # Always append for full-suite runs to enable apples-to-apples comparisons.
+        pr1 = pr2 = p50 = p95 = ""
+        ts = ""
+        info_model = m
+        if args.attempts_mode in ("1","both"):
+            csv1 = run_agent_batch(args.seeds, args.limit, m, temperature=args.temperature, jobs=args.jobs, attempts=1)
+            info1 = parse_csv(csv1)
+            ts1 = derive_timestamp(csv1)
+            pr1 = info1.get("pass_rate", "")
+            info_model = info1.get("model", m)
+            ts = ts1
+        if args.attempts_mode in ("2","both"):
+            csv2 = run_agent_batch(args.seeds, args.limit, m, temperature=args.temperature, jobs=args.jobs, attempts=2)
+            info2 = parse_csv(csv2)
+            ts2 = derive_timestamp(csv2)
+            pr2 = info2.get("pass_rate", "")
+            p50 = info2.get("p50", "")
+            p95 = info2.get("p95", "")
+            info_model = info2.get("model", info_model)
+            ts = ts2 or ts
+        # Append depending on notes/baseline
+        try:
+            agent_pass_rate = float(pr1 or 0.0)
+        except Exception:
+            agent_pass_rate = 0.0
         if "full" in (args.notes or '').lower():
-            append_row("BENCHMARKS.md", ts, info2.get("model", m), pr1, p50, p95, args.notes, info2.get("tokens_total", ""), pr2)
-            print(f"Appended BENCHMARKS row for {m} @ {ts} (full-suite run; attempts=1 and attempts=2 recorded)")
+            append_row("BENCHMARKS.md", ts, info_model, pr1, p50, p95, args.notes, (info2.get("tokens_total", "") if args.attempts_mode in ("2","both") else ""), pr2)
+            print(f"Appended BENCHMARKS row for {m} @ {ts} (full-suite run; attempts-mode={args.attempts_mode})")
         else:
-            try:
-                agent_pass_rate = float(pr1 or 0.0)
-            except Exception:
-                agent_pass_rate = 0.0
             if agent_pass_rate > baseline_pass_rate:
-                append_row("BENCHMARKS.md", ts, info2.get("model", m), pr1, p50, p95, args.notes, info2.get("tokens_total", ""), pr2)
-                print(f"Appended BENCHMARKS row for {m} @ {ts} (agent {agent_pass_rate:.2f} > baseline {baseline_pass_rate:.2f}; attempts=2 also recorded)")
+                append_row("BENCHMARKS.md", ts, info_model, pr1, p50, p95, args.notes, (info2.get("tokens_total", "") if args.attempts_mode in ("2","both") else ""), pr2)
+                print(f"Appended BENCHMARKS row for {m} @ {ts} (agent {agent_pass_rate:.2f} > baseline {baseline_pass_rate:.2f}; attempts-mode={args.attempts_mode})")
             else:
                 print(f"Skipped append for {m}: agent {agent_pass_rate:.2f} <= baseline {baseline_pass_rate:.2f}")
     # Normalize leaderboard to best per model if notes indicate full suite
     try:
         if "full" in (args.notes or '').lower():
             from demas.benchmarks.append import normalize_leaderboard
-            normalize_leaderboard("BENCHMARKS.md")
+            # Prefer rows from the latest dual-attempt runs when available
+            normalize_leaderboard("BENCHMARKS.md", suite_marker="attempts=1 and 2")
             print("Normalized leaderboard to best row per model.")
     except Exception as e:
         print(f"(Normalization failed): {e}")

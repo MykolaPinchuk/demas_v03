@@ -145,6 +145,19 @@ Then open the newest `sandbox/agent_batch_runs/<ts>/summary.csv` and record:
 | 20250913_164201 | zai-org/GLM-4.5-FP8 | 0.25 | 0.12 | 13.127 | 13.304 | tokens=80 full suite, attempts=1 and 2, jobs=12, temp=0.2 |
 | 20250913_164311 | zai-org/GLM-4.5-Air | 0.12 | 0.50 | 27.729 | 28.264 | tokens=40 full suite, attempts=1 and 2, jobs=12, temp=0.2 |
 | 20250913_164432 | unsloth/gemma-3-12b-it | 0.00 | 0.00 | 27.865 | 28.387 | tokens=80 full suite, attempts=1 and 2, jobs=12, temp=0.2 |
+| 20250913_165932 | moonshotai/Kimi-K2-Instruct-0905 | 0.50 |  | NA | NA | full suite, attempts=1 refresh, jobs=12, temp=0.2 |
+| 20250913_170029 | moonshotai/Kimi-K2-Instruct-75k | 0.50 |  | NA | NA | full suite, attempts=1 refresh, jobs=12, temp=0.2 |
+| 20250913_170106 | moonshotai/Kimi-Dev-72B | 0.00 |  | NA | NA | full suite, attempts=1 refresh, jobs=12, temp=0.2 |
+| 20250913_170111 | deepseek-ai/DeepSeek-V3.1 | 0.50 |  | NA | NA | full suite, attempts=1 refresh, jobs=12, temp=0.2 |
+| 20250913_170211 | deepseek-ai/DeepSeek-V3-0324 | 0.00 |  | NA | NA | full suite, attempts=1 refresh, jobs=12, temp=0.2 |
+| 20250913_170238 | deepseek-ai/DeepSeek-R1-0528 | 0.00 |  | NA | NA | full suite, attempts=1 refresh, jobs=12, temp=0.2 |
+| 20250913_170305 | Qwen/Qwen3-Coder-480B-A35B-Instruct-FP8 | 0.75 |  | NA | NA | full suite, attempts=1 refresh, jobs=12, temp=0.2 |
+| 20250913_170352 | Qwen/Qwen3-Coder-30B-A3B-Instruct | 0.62 |  | NA | NA | full suite, attempts=1 refresh, jobs=12, temp=0.2 |
+| 20250913_170423 | Qwen/Qwen3-Next-80B-A3B-Instruct | 0.12 |  | NA | NA | full suite, attempts=1 refresh, jobs=12, temp=0.2 |
+| 20250913_170447 | Qwen/Qwen3-235B-A22B-Thinking-2507 | 0.00 |  | NA | NA | full suite, attempts=1 refresh, jobs=12, temp=0.2 |
+| 20250913_170451 | zai-org/GLM-4.5-FP8 | 0.00 |  | NA | NA | full suite, attempts=1 refresh, jobs=12, temp=0.2 |
+| 20250913_170455 | zai-org/GLM-4.5-Air | 0.00 |  | NA | NA | full suite, attempts=1 refresh, jobs=12, temp=0.2 |
+| 20250913_170458 | unsloth/gemma-3-12b-it | 0.00 |  | NA | NA | full suite, attempts=1 refresh, jobs=12, temp=0.2 |
 <!-- LOG_TABLE_END -->
 
 Notes:

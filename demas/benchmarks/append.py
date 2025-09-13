@@ -123,26 +123,30 @@ def normalize_leaderboard(md_path: str, *, suite_marker: str | None = None) -> N
         return
     log_section = content[log_start:log_end]
     all_rows = _parse_table_rows(log_section)
-    # Consider only rows whose notes contain 'full' and optional suite marker
-    def _is_target(r):
-        n = (r.get("notes", "").lower())
-        if "full" not in n:
-            return False
-        if suite_marker:
-            return suite_marker.lower() in n
-        return True
-    full_rows = [r for r in all_rows if _is_target(r)]
-    # Select best per model: max pass_rate, tie-break min p50
+    # Consider only rows whose notes contain 'full'
+    def _is_full(r):
+        return "full" in (r.get("notes", "").lower())
+    candidates = [r for r in all_rows if _is_full(r)]
+    # If suite_marker provided, prefer those rows; if none, fall back to all 'full' rows
+    if suite_marker:
+        marked = [r for r in candidates if suite_marker.lower() in (r.get("notes", "").lower())]
+        if marked:
+            candidates = marked
+    # Select best per model: prefer higher pass_rate_2_attempts when available (>0),
+    # otherwise use pass_rate. Tie-break on lower p50.
     best_by_model = {}
-    for r in full_rows:
+    for r in candidates:
         m = r["model"]
         prev = best_by_model.get(m)
+        def _metric(x):
+            pr2 = x.get("pass_rate2") or 0.0
+            base = x.get("pass_rate") or 0.0
+            return pr2 if (isinstance(pr2, float) and pr2 > 0.0) else base
         if prev is None:
             best_by_model[m] = r
         else:
-            if (r["pass_rate"] > prev["pass_rate"]) or (
-                r["pass_rate"] == prev["pass_rate"] and r["p50"] < prev["p50"]
-            ):
+            m_new, m_prev = _metric(r), _metric(prev)
+            if (m_new > m_prev) or (m_new == m_prev and r["p50"] < prev["p50"]):
                 best_by_model[m] = r
     # Build new main table
     header = (
