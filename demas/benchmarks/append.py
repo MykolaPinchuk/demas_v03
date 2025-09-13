@@ -51,9 +51,15 @@ def derive_timestamp(csv_path: str) -> str:
     return os.path.basename(os.path.dirname(csv_path))
 
 
-def append_row(md_path: str, ts: str, model: str, pass_rate: str, p50: str, p95: str, notes: str, tokens: str = ""):
+def append_row(md_path: str, ts: str, model: str, pass_rate: str, p50: str, p95: str, notes: str, tokens: str = "", pass_rate2: str = ""):
+    """Append a single benchmark row to both LOG and (optionally) MAIN tables.
+
+    Columns (LOG and MAIN): timestamp | model | pass_rate | pass_rate_2_attempts | p50_duration_s | p95_duration_s | notes
+
+    pass_rate_2_attempts is optional; leave empty if not available.
+    """
     note_tokens = f"tokens={tokens} " if tokens else ""
-    line = f"| {ts} | {model} | {pass_rate or 'NA'} | {p50 or 'NA'} | {p95 or 'NA'} | {note_tokens}{notes or ''} |\n"
+    line = f"| {ts} | {model} | {pass_rate or 'NA'} | {pass_rate2 or ''} | {p50 or 'NA'} | {p95 or 'NA'} | {note_tokens}{notes or ''} |\n"
     with open(md_path, "r+", encoding="utf-8") as f:
         content = f.read()
         # Always append to the run log table
@@ -80,14 +86,27 @@ def _parse_table_rows(section: str):
         if len(parts) < 6 or parts[0] == "timestamp":
             continue
         try:
-            rows.append({
-                "timestamp": parts[0],
-                "model": parts[1],
-                "pass_rate": float(parts[2]) if parts[2] else 0.0,
-                "p50": float(parts[3]) if parts[3] else 0.0,
-                "p95": float(parts[4]) if parts[4] else 0.0,
-                "notes": parts[5],
-            })
+            # Support both legacy 6-column rows and new 7-column rows with pass_rate_2_attempts
+            if len(parts) >= 7:
+                rows.append({
+                    "timestamp": parts[0],
+                    "model": parts[1],
+                    "pass_rate": float(parts[2]) if parts[2] else 0.0,
+                    "pass_rate2": float(parts[3]) if parts[3] else 0.0,
+                    "p50": float(parts[4]) if parts[4] else 0.0,
+                    "p95": float(parts[5]) if parts[5] else 0.0,
+                    "notes": parts[6],
+                })
+            else:
+                rows.append({
+                    "timestamp": parts[0],
+                    "model": parts[1],
+                    "pass_rate": float(parts[2]) if parts[2] else 0.0,
+                    "pass_rate2": 0.0,
+                    "p50": float(parts[3]) if parts[3] else 0.0,
+                    "p95": float(parts[4]) if parts[4] else 0.0,
+                    "notes": parts[5],
+                })
         except Exception:
             continue
     return rows
@@ -127,14 +146,16 @@ def normalize_leaderboard(md_path: str, *, suite_marker: str | None = None) -> N
                 best_by_model[m] = r
     # Build new main table
     header = (
-        "| timestamp           | model                                      | pass_rate | p50_duration_s | p95_duration_s | notes |\n"
-        "|---------------------|--------------------------------------------|-----------|----------------|----------------|-------|\n"
+        "| timestamp           | model                                      | pass_rate | pass_rate_2_attempts | p50_duration_s | p95_duration_s | notes |\n"
+        "|---------------------|--------------------------------------------|-----------|----------------------|----------------|----------------|-------|\n"
     )
     rows_md = []
     for model in sorted(best_by_model.keys()):
         r = best_by_model[model]
+        pr2 = r.get('pass_rate2')
+        pr2s = f"{pr2:.2f}" if isinstance(pr2, float) else ""
         rows_md.append(
-            f"| {r['timestamp']} | {r['model']} | {r['pass_rate']:.2f} | {r['p50']} | {r['p95']} | {r['notes']} |\n"
+            f"| {r['timestamp']} | {r['model']} | {r['pass_rate']:.2f} | {pr2s} | {r['p50']} | {r['p95']} | {r['notes']} |\n"
         )
     new_main = "<!-- MAIN_TABLE_START -->\n" + header + "".join(rows_md) + "<!-- MAIN_TABLE_END -->"
     # Replace main table section

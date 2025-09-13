@@ -32,24 +32,24 @@ Then open the newest `sandbox/agent_batch_runs/<ts>/summary.csv` and record:
 - Columns: `timestamp`, `model`, `pass_rate`, `p50_duration_s`, `p95_duration_s`, `notes`
 
 <!-- MAIN_TABLE_START -->
-| timestamp           | model                                      | pass_rate | p50_duration_s | p95_duration_s | notes |
-|---------------------|--------------------------------------------|-----------|----------------|----------------|-------|
-| 20250913_161757 | Qwen/Qwen3-235B-A22B-Thinking-2507 | 0.00 | 2.937 | 2.999 | full suite, jobs=12, temp=0.2 |
-| 20250911_022627 | Qwen/Qwen3-Coder-30B-A3B-Instruct | 0.62 | 25.121 | 33.331 | full suite, jobs=12, temp=0.2 |
-| 20250911_014635 | Qwen/Qwen3-Coder-480B-A35B-Instruct-FP8 | 0.88 | 19.52 | 42.094 | tokens=80 full suite, attempts=2, jobs=12, temp=0.2 |
-| 20250913_161729 | Qwen/Qwen3-Next-80B-A3B-Instruct | 0.12 | 26.417 | 27.044 | full suite, jobs=12, temp=0.2 |
-| 20250913_161701 | deepseek-ai/DeepSeek-R1-0528 | 0.00 | 23.483 | 24.675 | full suite, jobs=12, temp=0.2 |
-| 20250909_020102 | deepseek-ai/DeepSeek-V3-0324 | 0.00 | 21.419 | 24.55 | full model sweep (no OpenAI), temp=0 |
-| 20250909_015718 | deepseek-ai/DeepSeek-V3.1 | 0.71 | 23.382 | 40.764 | full model sweep (no OpenAI), temp=0 |
-| 20250911_022408 | moonshotai/Kimi-Dev-72B | 0.00 | 3.63 | 4.404 | full suite, jobs=12, temp=0.2 |
-| 20250910_013413 | moonshotai/Kimi-K2-Instruct-0905 | 0.71 | 28.332 | 41.137 | tokens=0 full tokenized sweep (append only > baseline), jobs=12, temp=0.2 |
-| 20250909_015323 | moonshotai/Kimi-K2-Instruct-75k | 0.57 | 29.178 | 40.891 | full model sweep (no OpenAI), temp=0 |
-| 20250910_010234 | openai/gpt-5-mini | 0.71 | 40.57 | 57.754 | full suite auto-append |
-| 20250910_013752 | openai/gpt-oss-120b | 0.57 | 39.799 | 65.353 | tokens=0 full tokenized sweep (append only > baseline), jobs=12, temp=0.2 |
-| 20250911_023004 | openai/r1-0528 | 0.00 | 1.458 | 1.474 | full suite, jobs=12, temp=0.2 |
-| 20250911_023006 | unsloth/gemma-3-12b-it | 0.00 | 15.489 | 16.79 | full suite, jobs=12, temp=0.2 |
-| 20250911_022757 | zai-org/GLM-4.5-Air | 0.75 | 25.428 | 38.675 | full suite, jobs=12, temp=0.2 |
-| 20250911_014435 | zai-org/GLM-4.5-FP8 | 0.88 | 24.101 | 26.57 | tokens=70 full suite, attempts=2, jobs=12, temp=0.2 |
+| timestamp           | model                                      | pass_rate | pass_rate_2_attempts | p50_duration_s | p95_duration_s | notes |
+|---------------------|--------------------------------------------|-----------|----------------------|----------------|----------------|-------|
+| 20250913_161757 | Qwen/Qwen3-235B-A22B-Thinking-2507 | 0.00 | 0.00 | 2.937 | 2.999 | full suite, jobs=12, temp=0.2 |
+| 20250911_022627 | Qwen/Qwen3-Coder-30B-A3B-Instruct | 0.62 | 0.00 | 25.121 | 33.331 | full suite, jobs=12, temp=0.2 |
+| 20250911_014635 | Qwen/Qwen3-Coder-480B-A35B-Instruct-FP8 | 0.88 | 0.00 | 19.52 | 42.094 | tokens=80 full suite, attempts=2, jobs=12, temp=0.2 |
+| 20250913_161729 | Qwen/Qwen3-Next-80B-A3B-Instruct | 0.12 | 0.00 | 26.417 | 27.044 | full suite, jobs=12, temp=0.2 |
+| 20250913_164042 | deepseek-ai/DeepSeek-R1-0528 | 0.00 | 0.00 | 6.069 | 6.112 | tokens=80 full suite, attempts=1 and 2, jobs=12, temp=0.2 |
+| 20250913_164032 | deepseek-ai/DeepSeek-V3-0324 | 0.00 | 0.00 | 6.198 | 6.285 | tokens=80 full suite, attempts=1 and 2, jobs=12, temp=0.2 |
+| 20250909_015718 | deepseek-ai/DeepSeek-V3.1 | 0.71 | 0.00 | 23.382 | 40.764 | full model sweep (no OpenAI), temp=0 |
+| 20250911_022408 | moonshotai/Kimi-Dev-72B | 0.00 | 0.00 | 3.63 | 4.404 | full suite, jobs=12, temp=0.2 |
+| 20250910_013413 | moonshotai/Kimi-K2-Instruct-0905 | 0.71 | 0.00 | 28.332 | 41.137 | tokens=0 full tokenized sweep (append only > baseline), jobs=12, temp=0.2 |
+| 20250909_015323 | moonshotai/Kimi-K2-Instruct-75k | 0.57 | 0.00 | 29.178 | 40.891 | full model sweep (no OpenAI), temp=0 |
+| 20250910_010234 | openai/gpt-5-mini | 0.71 | 0.00 | 40.57 | 57.754 | full suite auto-append |
+| 20250910_013752 | openai/gpt-oss-120b | 0.57 | 0.00 | 39.799 | 65.353 | tokens=0 full tokenized sweep (append only > baseline), jobs=12, temp=0.2 |
+| 20250911_023004 | openai/r1-0528 | 0.00 | 0.00 | 1.458 | 1.474 | full suite, jobs=12, temp=0.2 |
+| 20250911_023006 | unsloth/gemma-3-12b-it | 0.00 | 0.00 | 15.489 | 16.79 | full suite, jobs=12, temp=0.2 |
+| 20250911_022757 | zai-org/GLM-4.5-Air | 0.75 | 0.00 | 25.428 | 38.675 | full suite, jobs=12, temp=0.2 |
+| 20250911_014435 | zai-org/GLM-4.5-FP8 | 0.88 | 0.00 | 24.101 | 26.57 | tokens=70 full suite, attempts=2, jobs=12, temp=0.2 |
 <!-- MAIN_TABLE_END -->
 
 ### Run log (all runs)
@@ -135,6 +135,19 @@ Then open the newest `sandbox/agent_batch_runs/<ts>/summary.csv` and record:
 | 20250913_161701 | deepseek-ai/DeepSeek-R1-0528 | 0.00 | 23.483 | 24.675 | full suite, jobs=12, temp=0.2 |
 | 20250913_161729 | Qwen/Qwen3-Next-80B-A3B-Instruct | 0.12 | 26.417 | 27.044 | full suite, jobs=12, temp=0.2 |
 | 20250913_161757 | Qwen/Qwen3-235B-A22B-Thinking-2507 | 0.00 | 2.937 | 2.999 | full suite, jobs=12, temp=0.2 |
+| 20250913_163546 | moonshotai/Kimi-K2-Instruct-0905 | 0.50 | 0.62 | 26.949 | 77.503 | tokens=80 full suite, attempts=1 and 2, jobs=12, temp=0.2 |
+| 20250913_163747 | moonshotai/Kimi-K2-Instruct-75k | 0.50 | 0.38 | 32.660 | 85.724 | tokens=80 full suite, attempts=1 and 2, jobs=12, temp=0.2 |
+| 20250913_163923 | moonshotai/Kimi-Dev-72B | 0.00 | 0.00 | 7.118 | 9.180 | tokens=80 full suite, attempts=1 and 2, jobs=12, temp=0.2 |
+| 20250913_164018 | deepseek-ai/DeepSeek-V3.1 | 0.50 | 0.00 | 9.180 | 10.436 | tokens=80 full suite, attempts=1 and 2, jobs=12, temp=0.2 |
+| 20250913_164032 | deepseek-ai/DeepSeek-V3-0324 | 0.00 | 0.00 | 6.198 | 6.285 | tokens=80 full suite, attempts=1 and 2, jobs=12, temp=0.2 |
+| 20250913_164042 | deepseek-ai/DeepSeek-R1-0528 | 0.00 | 0.00 | 6.069 | 6.112 | tokens=80 full suite, attempts=1 and 2, jobs=12, temp=0.2 |
+| 20250913_164051 | Qwen/Qwen3-Coder-480B-A35B-Instruct-FP8 | 0.00 | 0.00 | 6.357 | 6.434 | tokens=80 full suite, attempts=1 and 2, jobs=12, temp=0.2 |
+| 20250913_164101 | Qwen/Qwen3-Coder-30B-A3B-Instruct | 0.00 | 0.00 | 6.144 | 6.224 | tokens=80 full suite, attempts=1 and 2, jobs=12, temp=0.2 |
+| 20250913_164111 | Qwen/Qwen3-Next-80B-A3B-Instruct | 0.00 | 0.00 | 5.974 | 6.299 | tokens=80 full suite, attempts=1 and 2, jobs=12, temp=0.2 |
+| 20250913_164120 | Qwen/Qwen3-235B-A22B-Thinking-2507 | 0.00 | 0.00 | 6.022 | 6.134 | tokens=80 full suite, attempts=1 and 2, jobs=12, temp=0.2 |
+| 20250913_164201 | zai-org/GLM-4.5-FP8 | 0.25 | 0.12 | 13.127 | 13.304 | tokens=80 full suite, attempts=1 and 2, jobs=12, temp=0.2 |
+| 20250913_164311 | zai-org/GLM-4.5-Air | 0.12 | 0.50 | 27.729 | 28.264 | tokens=40 full suite, attempts=1 and 2, jobs=12, temp=0.2 |
+| 20250913_164432 | unsloth/gemma-3-12b-it | 0.00 | 0.00 | 27.865 | 28.387 | tokens=80 full suite, attempts=1 and 2, jobs=12, temp=0.2 |
 <!-- LOG_TABLE_END -->
 
 Notes:
