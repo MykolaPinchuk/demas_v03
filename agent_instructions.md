@@ -18,3 +18,9 @@
 - Be direct and clear. 
 - Human use is 'he', not 'they'.
 - Keep count of lines of code among files outside .cursorignore below 4,000.
+
+### Python virtual environment (venv)
+- Always activate a local venv before running any Python commands in this repo:
+  - `python3 -m venv .venv && source .venv/bin/activate`
+  - `python -m pip install -U pip && python -m pip install -r requirements.txt`
+- This avoids dependency conflicts and keeps the global Python clean.

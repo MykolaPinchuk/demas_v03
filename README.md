@@ -24,7 +24,11 @@ Docs map:
 
 ### Requirements
 - Docker installed and able to run Linux containers.
-- Python 3.10+ on host: `pip install -r requirements.txt` (for the agent scripts).
+- Python 3.10+ on host: preferably use a virtual environment.
+  - Quick start (venv):
+    - `python3 -m venv .venv && source .venv/bin/activate`
+    - `python -m pip install -U pip && python -m pip install -r requirements.txt`
+  - If you skip venv, ensure your global Python does not conflict with pinned deps.
 - Chutes API key for agent mode: set `CHUTES_API_KEY`.
   - Optional: place secrets in `~/.config/demas/credentials.env`, repo-local `.env.local`, or `demas/credentials.txt`:
     - Lines: `KEY=VALUE` (e.g., `CHUTES_API_KEY=...`). Comments `#` and blanks are ignored. Existing env vars are not overridden.
@@ -123,6 +127,10 @@ CHUTES_API_KEY=YOUR_KEY python swebench_batch.py \
 ### Performance notes
 - Parallel execution: Use `--jobs N` (agent and baseline) to reduce wall time; on a 16‑thread machine with 7 tasks, `--jobs 12–14` works well.
 - Benchmarks auto‑append: Full agent runs (`--limit 0`) are persisted to `BENCHMARKS.md` automatically; add context via `--bench-notes`.
+
+### Python virtual environment (recommended)
+- Use `python3 -m venv .venv && source .venv/bin/activate` before installing requirements.
+- Keep the venv active when running all commands in this README.
 
 ### Profiling
 - Agent: convert logs to a CSV profile (per-tool durations):

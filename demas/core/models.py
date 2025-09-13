@@ -17,9 +17,12 @@ TRACKED_MODELS: List[str] = [
     # DeepSeek (Chutes)
     "deepseek-ai/DeepSeek-V3.1",
     "deepseek-ai/DeepSeek-V3-0324",
+    "deepseek-ai/DeepSeek-R1-0528",
     # Qwen (Chutes)
     "Qwen/Qwen3-Coder-480B-A35B-Instruct-FP8",
     "Qwen/Qwen3-Coder-30B-A3B-Instruct",
+    "Qwen/Qwen3-Next-80B-A3B-Instruct",
+    "Qwen/Qwen3-235B-A22B-Thinking-2507",
     # Zhipu/GLM (Chutes)
     "zai-org/GLM-4.5-FP8",
     "zai-org/GLM-4.5-Air",

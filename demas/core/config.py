@@ -49,7 +49,7 @@ WORKDIR = os.path.abspath("sandbox")
 
 # Per-stage timeouts (seconds)
 TIMEOUT_CLONE = int(os.environ.get("TIMEOUT_CLONE", "5"))
-TIMEOUT_INSTALL = int(os.environ.get("TIMEOUT_INSTALL", "20"))
+TIMEOUT_INSTALL = int(os.environ.get("TIMEOUT_INSTALL", "30"))
 TIMEOUT_TEST = int(os.environ.get("TIMEOUT_TEST", "5"))
 
 
