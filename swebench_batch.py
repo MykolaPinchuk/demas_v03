@@ -132,6 +132,28 @@ def run_agent_for_task(task: Dict[str, Any], *, out_dir: str, model: str, temper
     start_overall = time.time()
     last_hint = ""
     last_tail = ""
+    def _extract_tail_from_log(log_path: str) -> str:
+        """Read the agent log and return the last pytest tail emitted by swe_pytest/_auto.
+
+        This avoids relying on stdout of the agent process, which may contain
+        wrapper objects (e.g., FunctionExecutionResult) rather than raw tails.
+        """
+        try:
+            last_tail = ""
+            with open(log_path, "r", encoding="utf-8") as f:
+                for line in f:
+                    line = line.strip()
+                    if not line:
+                        continue
+                    rec = json.loads(line)
+                    if rec.get("role") == "tool" and rec.get("tool_name") in ("swe_pytest", "swe_pytest_auto"):
+                        tr = rec.get("tool_result") or ""
+                        if isinstance(tr, str) and tr.strip():
+                            last_tail = tr.strip()
+            return last_tail
+        except Exception:
+            return ""
+
     for k in range(1, attempts_n + 1):
         env_k = env.copy()
         attempt_dir = os.path.join(out_dir, f"attempt_{k}")
@@ -154,15 +176,17 @@ def run_agent_for_task(task: Dict[str, Any], *, out_dir: str, model: str, temper
         except subprocess.TimeoutExpired as e:
             out = (e.stdout or "") + "\n(timeout)"
         dt_k = time.time() - t0
-        # Determine tail
-        tail = ""
-        for ln in out.splitlines()[::-1]:
-            ln = ln.strip()
-            if not ln:
-                continue
-            if "passed" in ln or "failed" in ln or "error" in ln or "no tests ran" in ln:
-                tail = ln
-                break
+        # Determine tail: prefer reading from the JSONL logs (reliable), fallback to stdout scan
+        log_path = os.path.join(attempt_dir, "logs", f"{task.get('task_id','')}.jsonl")
+        tail = _extract_tail_from_log(log_path)
+        if not tail:
+            for ln in out.splitlines()[::-1]:
+                ln = ln.strip()
+                if not ln:
+                    continue
+                if "passed" in ln or "failed" in ln or "error" in ln or "no tests ran" in ln:
+                    tail = ln
+                    break
         last_tail = tail or last_tail
         # Model detection (first available)
         if not model_used:
@@ -173,7 +197,7 @@ def run_agent_for_task(task: Dict[str, Any], *, out_dir: str, model: str, temper
                     except Exception:
                         pass
                     break
-        passed = (" passed" in tail and " failed" not in tail and " error" not in tail)
+        passed = (" passed" in last_tail and " failed" not in last_tail and " error" not in last_tail)
         if passed:
             total_dt = time.time() - start_overall
             return {
@@ -183,13 +207,12 @@ def run_agent_for_task(task: Dict[str, Any], *, out_dir: str, model: str, temper
                 "pytest_k": task.get("pytest_k", ""),
                 "status": "pass",
                 "duration_s": round(total_dt, 3),
-                "tail": tail,
+                "tail": last_tail,
                 "model": model_used,
                 "temperature": temperature,
                 "max_turns": max_turns,
             }
         # Build hint for next attempt
-        log_path = os.path.join(attempt_dir, "logs", f"{task.get('task_id','')}.jsonl")
         last_hint = _build_attempt_hint(log_path, size_cap_bytes=2048)
     # All attempts failed
     total_dt = time.time() - start_overall

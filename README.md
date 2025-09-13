@@ -80,7 +80,7 @@ Agent batch outputs:
 ### Task format
 Local JSONL schema used by both baseline and agent:
 ```json
-{"task_id":"id","repo":"https://github.com/org/repo","ref":"<commit-or-branch>","pytest_k":"","patch_b64":"","timeouts":{"clone":5,"install":20,"test":5}}
+{"task_id":"id","repo":"https://github.com/org/repo","ref":"<commit-or-branch>","pytest_k":"","patch_b64":"","timeouts":{"clone":5,"install":30,"test":5}}
 ```
 See also `plan.md` for how this schema is used across single and batch runs.
 
@@ -104,6 +104,27 @@ python -m demas.benchmarks.sweep \
   --jobs 12 \
   --temperature 0 \
   --notes "full suite, temp=0"
+Dual‑attempt sweeps and Chutes‑only runs:
+- When notes contain `full`, leaderboard rows include both `pass_rate` (attempts=1) and `pass_rate_2_attempts` (attempts=2).
+- Prefer Chutes‑only sweeps when OpenRouter isn’t configured:
+```bash
+python -m demas.benchmarks.sweep \
+  --seeds sandbox/swe_tasks.jsonl \
+  --limit 0 \
+  --jobs 12 \
+  --notes "full suite, attempts=1 and 2, jobs=12, temp=0.2" \
+  --chutes-only
+```
+- Refresh attempts=1 only (recomputes pass_rate for current suite):
+```bash
+python -m demas.benchmarks.sweep \
+  --seeds sandbox/swe_tasks.jsonl \
+  --limit 0 \
+  --jobs 12 \
+  --attempts-mode 1 \
+  --notes "full suite, attempts=1 refresh, jobs=12, temp=0.2" \
+  --chutes-only
+```
 ```
  - Keep best per model on leaderboard after a full sweep:
 ```bash
