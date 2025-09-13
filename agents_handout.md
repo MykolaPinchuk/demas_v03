@@ -47,7 +47,7 @@ python -m demas.benchmarks.sweep \
   --limit 0 \
   --jobs 12 \
   --temperature 0 \
-  --notes "full 7-task sweep, jobs=12, temp=0"
+  --notes "full suite, jobs=12, temp=0"
 ```
 - After a sweep (or anytime) you can normalize the leaderboard explicitly:
 ```bash
@@ -75,7 +75,7 @@ python swebench_batch.py --seeds sandbox/swe_tasks.jsonl --limit 2 --agent --job
 - Full agent suite runs (`--agent` with `--limit 0`) auto-append a row to `BENCHMARKS.md`.
 - Add notes (and leaderboard eligibility) with:
 ```bash
-python swebench_batch.py --seeds sandbox/swe_tasks.jsonl --agent --limit 0 --bench-notes "full 7-task suite, jobs=12, temp=0.2"
+python swebench_batch.py --seeds sandbox/swe_tasks.jsonl --agent --limit 0 --bench-notes "full suite, jobs=12, temp=0.2"
 ```
 
 ### Guardrails

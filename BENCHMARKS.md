@@ -34,22 +34,22 @@ Then open the newest `sandbox/agent_batch_runs/<ts>/summary.csv` and record:
 <!-- MAIN_TABLE_START -->
 | timestamp           | model                                      | pass_rate | p50_duration_s | p95_duration_s | notes |
 |---------------------|--------------------------------------------|-----------|----------------|----------------|-------|
-| 20250913_161757 | Qwen/Qwen3-235B-A22B-Thinking-2507 | 0.00 | 2.937 | 2.999 | full 7-task suite, jobs=12, temp=0.2 |
-| 20250911_022627 | Qwen/Qwen3-Coder-30B-A3B-Instruct | 0.62 | 25.121 | 33.331 | full suite8, jobs=12, temp=0.2 |
-| 20250911_014635 | Qwen/Qwen3-Coder-480B-A35B-Instruct-FP8 | 0.88 | 19.52 | 42.094 | tokens=80 full 8-task suite, attempts=2, jobs=12, temp=0.2 |
-| 20250913_161729 | Qwen/Qwen3-Next-80B-A3B-Instruct | 0.12 | 26.417 | 27.044 | full 7-task suite, jobs=12, temp=0.2 |
-| 20250913_161701 | deepseek-ai/DeepSeek-R1-0528 | 0.00 | 23.483 | 24.675 | full 7-task suite, jobs=12, temp=0.2 |
+| 20250913_161757 | Qwen/Qwen3-235B-A22B-Thinking-2507 | 0.00 | 2.937 | 2.999 | full suite, jobs=12, temp=0.2 |
+| 20250911_022627 | Qwen/Qwen3-Coder-30B-A3B-Instruct | 0.62 | 25.121 | 33.331 | full suite, jobs=12, temp=0.2 |
+| 20250911_014635 | Qwen/Qwen3-Coder-480B-A35B-Instruct-FP8 | 0.88 | 19.52 | 42.094 | tokens=80 full suite, attempts=2, jobs=12, temp=0.2 |
+| 20250913_161729 | Qwen/Qwen3-Next-80B-A3B-Instruct | 0.12 | 26.417 | 27.044 | full suite, jobs=12, temp=0.2 |
+| 20250913_161701 | deepseek-ai/DeepSeek-R1-0528 | 0.00 | 23.483 | 24.675 | full suite, jobs=12, temp=0.2 |
 | 20250909_020102 | deepseek-ai/DeepSeek-V3-0324 | 0.00 | 21.419 | 24.55 | full model sweep (no OpenAI), temp=0 |
 | 20250909_015718 | deepseek-ai/DeepSeek-V3.1 | 0.71 | 23.382 | 40.764 | full model sweep (no OpenAI), temp=0 |
-| 20250911_022408 | moonshotai/Kimi-Dev-72B | 0.00 | 3.63 | 4.404 | full suite8, jobs=12, temp=0.2 |
+| 20250911_022408 | moonshotai/Kimi-Dev-72B | 0.00 | 3.63 | 4.404 | full suite, jobs=12, temp=0.2 |
 | 20250910_013413 | moonshotai/Kimi-K2-Instruct-0905 | 0.71 | 28.332 | 41.137 | tokens=0 full tokenized sweep (append only > baseline), jobs=12, temp=0.2 |
 | 20250909_015323 | moonshotai/Kimi-K2-Instruct-75k | 0.57 | 29.178 | 40.891 | full model sweep (no OpenAI), temp=0 |
 | 20250910_010234 | openai/gpt-5-mini | 0.71 | 40.57 | 57.754 | full suite auto-append |
 | 20250910_013752 | openai/gpt-oss-120b | 0.57 | 39.799 | 65.353 | tokens=0 full tokenized sweep (append only > baseline), jobs=12, temp=0.2 |
-| 20250911_023004 | openai/r1-0528 | 0.00 | 1.458 | 1.474 | full suite8, jobs=12, temp=0.2 |
-| 20250911_023006 | unsloth/gemma-3-12b-it | 0.00 | 15.489 | 16.79 | full suite8, jobs=12, temp=0.2 |
-| 20250911_022757 | zai-org/GLM-4.5-Air | 0.75 | 25.428 | 38.675 | full suite8, jobs=12, temp=0.2 |
-| 20250911_014435 | zai-org/GLM-4.5-FP8 | 0.88 | 24.101 | 26.57 | tokens=70 full 8-task suite, attempts=2, jobs=12, temp=0.2 |
+| 20250911_023004 | openai/r1-0528 | 0.00 | 1.458 | 1.474 | full suite, jobs=12, temp=0.2 |
+| 20250911_023006 | unsloth/gemma-3-12b-it | 0.00 | 15.489 | 16.79 | full suite, jobs=12, temp=0.2 |
+| 20250911_022757 | zai-org/GLM-4.5-Air | 0.75 | 25.428 | 38.675 | full suite, jobs=12, temp=0.2 |
+| 20250911_014435 | zai-org/GLM-4.5-FP8 | 0.88 | 24.101 | 26.57 | tokens=70 full suite, attempts=2, jobs=12, temp=0.2 |
 <!-- MAIN_TABLE_END -->
 
 ### Run log (all runs)
@@ -70,9 +70,9 @@ Then open the newest `sandbox/agent_batch_runs/<ts>/summary.csv` and record:
 | 20250905_022509     | openai/gpt-oss-20b                         | 0.00      | 13.338         | 12.630         | both failed (API error) |
 | 20250905_022117     | moonshotai/Kimi-Dev-72B                    | 0.00      | 3.450          | 3.138          | both failed (runtime error) |
 | 20250909_003421 | moonshotai/Kimi-K2-Instruct-75k | 1.00 | 19.607 | 15.536 | 2-task smoke, Kimi-K2-75k, temp=0.2 |
-| 20250909_010004 | Qwen/Qwen3-Coder-480B-A35B-Instruct-FP8 | 0.86 | 31.878 | 42.294 | full 7-task suite, Qwen 480B FP8, jobs=12, temp=0.2 |
-| 20250909_010052 | zai-org/GLM-4.5-FP8 | 0.86 | 26.284 | 38.860 | full 7-task suite, GLM-4.5-FP8, jobs=12, temp=0.2 |
-| 20250909_010142 | Qwen/Qwen3-Coder-480B-A35B-Instruct-FP8 | 0.71 | 36.996 | 39.153 | full 7-task suite, Qwen 480B FP8, jobs=7, temp=0.2 |
+| 20250909_010004 | Qwen/Qwen3-Coder-480B-A35B-Instruct-FP8 | 0.86 | 31.878 | 42.294 | full suite, Qwen 480B FP8, jobs=12, temp=0.2 |
+| 20250909_010052 | zai-org/GLM-4.5-FP8 | 0.86 | 26.284 | 38.860 | full suite, GLM-4.5-FP8, jobs=12, temp=0.2 |
+| 20250909_010142 | Qwen/Qwen3-Coder-480B-A35B-Instruct-FP8 | 0.71 | 36.996 | 39.153 | full suite, Qwen 480B FP8, jobs=7, temp=0.2 |
 | 20250909_014957 | moonshotai/Kimi-K2-Instruct-0905 | 0.57 | 29.445 | 41.348 | full model sweep (no OpenAI), temp=0 |
 | 20250909_015323 | moonshotai/Kimi-K2-Instruct-75k | 0.57 | 29.178 | 40.891 | full model sweep (no OpenAI), temp=0 |
 | 20250909_015648 | moonshotai/Kimi-Dev-72B | 0.00 | 4.003 | 5.065 | full model sweep (no OpenAI), temp=0 |
@@ -84,57 +84,57 @@ Then open the newest `sandbox/agent_batch_runs/<ts>/summary.csv` and record:
 | 20250909_021357 | zai-org/GLM-4.5-Air | 0.57 | 31.814 | 46.456 | full model sweep (no OpenAI), temp=0 |
 | 20250909_021738 | unsloth/gemma-3-12b-it | 0.00 | 17.667 | 20.839 | full model sweep (no OpenAI), temp=0 |
 | 20250909_022023 | moonshotai/Kimi-K2-Instruct-0905 | 0.57 | 28.090 | 30.138 | full suite auto-append |
-| 20250909_022023 | moonshotai/Kimi-K2-Instruct-0905 | 0.57 | 28.090 | 30.138 | full 7-task sweep (no OpenAI), jobs=12, temp=0 |
+| 20250909_022023 | moonshotai/Kimi-K2-Instruct-0905 | 0.57 | 28.090 | 30.138 | full suite (no OpenAI), jobs=12, temp=0 |
 | 20250909_022100 | moonshotai/Kimi-K2-Instruct-75k | 0.57 | 34.386 | 37.415 | full suite auto-append |
-| 20250909_022100 | moonshotai/Kimi-K2-Instruct-75k | 0.57 | 34.386 | 37.415 | full 7-task sweep (no OpenAI), jobs=12, temp=0 |
+| 20250909_022100 | moonshotai/Kimi-K2-Instruct-75k | 0.57 | 34.386 | 37.415 | full suite (no OpenAI), jobs=12, temp=0 |
 | 20250909_022145 | moonshotai/Kimi-Dev-72B | 0.00 | 4.407 | 6.149 | full suite auto-append |
-| 20250909_022145 | moonshotai/Kimi-Dev-72B | 0.00 | 4.407 | 6.149 | full 7-task sweep (no OpenAI), jobs=12, temp=0 |
+| 20250909_022145 | moonshotai/Kimi-Dev-72B | 0.00 | 4.407 | 6.149 | full suite (no OpenAI), jobs=12, temp=0 |
 | 20250909_022151 | deepseek-ai/DeepSeek-V3.1 | 0.71 | 39.082 | 46.477 | full suite auto-append |
-| 20250909_022151 | deepseek-ai/DeepSeek-V3.1 | 0.71 | 39.082 | 46.477 | full 7-task sweep (no OpenAI), jobs=12, temp=0 |
+| 20250909_022151 | deepseek-ai/DeepSeek-V3.1 | 0.71 | 39.082 | 46.477 | full suite (no OpenAI), jobs=12, temp=0 |
 | 20250909_022308 | deepseek-ai/DeepSeek-V3-0324 | 0.00 | 21.892 | 23.900 | full suite auto-append |
-| 20250909_022308 | deepseek-ai/DeepSeek-V3-0324 | 0.00 | 21.892 | 23.900 | full 7-task sweep (no OpenAI), jobs=12, temp=0 |
+| 20250909_022308 | deepseek-ai/DeepSeek-V3-0324 | 0.00 | 21.892 | 23.900 | full suite (no OpenAI), jobs=12, temp=0 |
 | 20250909_022337 | Qwen/Qwen3-Coder-480B-A35B-Instruct-FP8 | 0.86 | 31.767 | 52.043 | full suite auto-append |
-| 20250909_022337 | Qwen/Qwen3-Coder-480B-A35B-Instruct-FP8 | 0.86 | 31.767 | 52.043 | full 7-task sweep (no OpenAI), jobs=12, temp=0 |
+| 20250909_022337 | Qwen/Qwen3-Coder-480B-A35B-Instruct-FP8 | 0.86 | 31.767 | 52.043 | full suite (no OpenAI), jobs=12, temp=0 |
 | 20250909_022430 | Qwen/Qwen3-Coder-30B-A3B-Instruct | 0.57 | 34.842 | 49.771 | full suite auto-append |
-| 20250909_022430 | Qwen/Qwen3-Coder-30B-A3B-Instruct | 0.57 | 34.842 | 49.771 | full 7-task sweep (no OpenAI), jobs=12, temp=0 |
+| 20250909_022430 | Qwen/Qwen3-Coder-30B-A3B-Instruct | 0.57 | 34.842 | 49.771 | full suite (no OpenAI), jobs=12, temp=0 |
 | 20250909_022525 | zai-org/GLM-4.5-FP8 | 0.86 | 26.224 | 39.613 | full suite auto-append |
-| 20250909_022525 | zai-org/GLM-4.5-FP8 | 0.86 | 26.224 | 39.613 | full 7-task sweep (no OpenAI), jobs=12, temp=0 |
+| 20250909_022525 | zai-org/GLM-4.5-FP8 | 0.86 | 26.224 | 39.613 | full suite (no OpenAI), jobs=12, temp=0 |
 | 20250909_022613 | zai-org/GLM-4.5-Air | 0.57 | 41.130 | 45.711 | full suite auto-append |
-| 20250909_022613 | zai-org/GLM-4.5-Air | 0.57 | 41.130 | 45.711 | full 7-task sweep (no OpenAI), jobs=12, temp=0 |
+| 20250909_022613 | zai-org/GLM-4.5-Air | 0.57 | 41.130 | 45.711 | full suite (no OpenAI), jobs=12, temp=0 |
 | 20250909_022700 | unsloth/gemma-3-12b-it | 0.00 | 18.126 | 19.070 | full suite auto-append |
-| 20250909_022700 | unsloth/gemma-3-12b-it | 0.00 | 18.126 | 19.070 | full 7-task sweep (no OpenAI), jobs=12, temp=0 |
+| 20250909_022700 | unsloth/gemma-3-12b-it | 0.00 | 18.126 | 19.070 | full suite (no OpenAI), jobs=12, temp=0 |
 | 20250910_010234 | openai/gpt-5-mini | 0.71 | 40.570 | 57.754 | full suite auto-append |
-| 20250910_010234 | openai/gpt-5-mini | 0.71 | 40.570 | 57.754 | full 7-task suite, OpenRouter gpt-5-mini, jobs=12, temp=0.2 |
+| 20250910_010234 | openai/gpt-5-mini | 0.71 | 40.570 | 57.754 | full suite, OpenRouter gpt-5-mini, jobs=12, temp=0.2 |
 | 20250910_010856 | openai/gpt-oss-120b | 0.57 | 46.890 | 72.806 | full suite auto-append |
-| 20250910_010856 | openai/gpt-oss-120b | 0.57 | 46.890 | 72.806 | full 7-task suite, OpenRouter gpt-oss-120b, jobs=12, temp=0.2 |
+| 20250910_010856 | openai/gpt-oss-120b | 0.57 | 46.890 | 72.806 | full suite, OpenRouter gpt-oss-120b, jobs=12, temp=0.2 |
 | 20250910_013413 | moonshotai/Kimi-K2-Instruct-0905 | 0.71 | 28.332 | 41.137 | tokens=0 full tokenized sweep (append only > baseline), jobs=12, temp=0.2 |
 | 20250910_013752 | openai/gpt-oss-120b | 0.57 | 39.799 | 65.353 | tokens=0 full tokenized sweep (append only > baseline), jobs=12, temp=0.2 |
-| 20250911_002604 | Qwen/Qwen3-Coder-480B-A35B-Instruct-FP8 | 0.86 | 27.033 | 38.701 | tokens=70 full 7-task suite, jobs=12, temp=0.2 |
-| 20250911_002700 | zai-org/GLM-4.5-FP8 | 0.86 | 30.104 | 41.006 | tokens=70 full 7-task suite, jobs=12, temp=0.2 |
-| 20250911_002758 | moonshotai/Kimi-K2-Instruct-0905 | 0.57 | 28.725 | 45.812 | tokens=70 full 7-task suite, jobs=12, temp=0.2 |
-| 20250911_010034 | zai-org/GLM-4.5-FP8 | 0.86 | 33.271 | 51.496 | tokens=70 full 7-task suite, attempts=2, jobs=12, temp=0.2 |
-| 20250911_010322 | moonshotai/Kimi-K2-Instruct-0905 | 0.57 | 25.032 | 40.473 | tokens=50 full 7-task suite, attempts=2, jobs=12, temp=0.2 |
-| 20250911_014435 | zai-org/GLM-4.5-FP8 | 0.88 | 24.101 | 26.570 | tokens=70 full 8-task suite, attempts=2, jobs=12, temp=0.2 |
-| 20250911_014635 | Qwen/Qwen3-Coder-480B-A35B-Instruct-FP8 | 0.88 | 19.520 | 42.094 | tokens=80 full 8-task suite, attempts=2, jobs=12, temp=0.2 |
-| 20250911_021115 | moonshotai/Kimi-K2-Instruct-0905 | 0.50 | 28.538 | 30.118 | full 8-task suite, jobs=12, temp=0.2 |
-| 20250911_021205 | moonshotai/Kimi-K2-Instruct-75k | 0.50 | 22.355 | 41.288 | full 8-task suite, jobs=12, temp=0.2 |
-| 20250911_021312 | deepseek-ai/DeepSeek-V3.1 | 0.50 | 20.162 | 30.252 | full 8-task suite, jobs=12, temp=0.2 |
-| 20250911_022220 | moonshotai/Kimi-K2-Instruct-0905 | 0.50 | 23.706 | 48.550 | full suite8, jobs=12, temp=0.2 |
-| 20250911_022310 | moonshotai/Kimi-K2-Instruct-75k | 0.50 | 21.804 | 49.841 | full suite8, jobs=12, temp=0.2 |
-| 20250911_022408 | moonshotai/Kimi-Dev-72B | 0.00 | 3.630 | 4.404 | full suite8, jobs=12, temp=0.2 |
-| 20250911_022414 | deepseek-ai/DeepSeek-V3.1 | 0.50 | 15.400 | 42.783 | full suite8, jobs=12, temp=0.2 |
-| 20250911_022514 | deepseek-ai/DeepSeek-V3-0324 | 0.00 | 21.788 | 24.457 | full suite8, jobs=12, temp=0.2 |
-| 20250911_022539 | Qwen/Qwen3-Coder-480B-A35B-Instruct-FP8 | 0.88 | 19.858 | 47.483 | full suite8, jobs=12, temp=0.2 |
-| 20250911_022627 | Qwen/Qwen3-Coder-30B-A3B-Instruct | 0.62 | 25.121 | 33.331 | full suite8, jobs=12, temp=0.2 |
-| 20250911_022709 | zai-org/GLM-4.5-FP8 | 0.75 | 20.485 | 29.614 | full suite8, jobs=12, temp=0.2 |
-| 20250911_022757 | zai-org/GLM-4.5-Air | 0.75 | 25.428 | 38.675 | full suite8, jobs=12, temp=0.2 |
-| 20250911_022838 | openai/gpt-5-mini | 0.50 | 16.761 | 42.235 | full suite8, jobs=12, temp=0.2 |
-| 20250911_022938 | openai/gpt-oss-120b | 0.50 | 14.957 | 18.909 | full suite8, jobs=12, temp=0.2 |
-| 20250911_023004 | openai/r1-0528 | 0.00 | 1.458 | 1.474 | full suite8, jobs=12, temp=0.2 |
-| 20250911_023006 | unsloth/gemma-3-12b-it | 0.00 | 15.489 | 16.790 | full suite8, jobs=12, temp=0.2 |
-| 20250913_161701 | deepseek-ai/DeepSeek-R1-0528 | 0.00 | 23.483 | 24.675 | full 7-task suite, jobs=12, temp=0.2 |
-| 20250913_161729 | Qwen/Qwen3-Next-80B-A3B-Instruct | 0.12 | 26.417 | 27.044 | full 7-task suite, jobs=12, temp=0.2 |
-| 20250913_161757 | Qwen/Qwen3-235B-A22B-Thinking-2507 | 0.00 | 2.937 | 2.999 | full 7-task suite, jobs=12, temp=0.2 |
+| 20250911_002604 | Qwen/Qwen3-Coder-480B-A35B-Instruct-FP8 | 0.86 | 27.033 | 38.701 | tokens=70 full suite, jobs=12, temp=0.2 |
+| 20250911_002700 | zai-org/GLM-4.5-FP8 | 0.86 | 30.104 | 41.006 | tokens=70 full suite, jobs=12, temp=0.2 |
+| 20250911_002758 | moonshotai/Kimi-K2-Instruct-0905 | 0.57 | 28.725 | 45.812 | tokens=70 full suite, jobs=12, temp=0.2 |
+| 20250911_010034 | zai-org/GLM-4.5-FP8 | 0.86 | 33.271 | 51.496 | tokens=70 full suite, attempts=2, jobs=12, temp=0.2 |
+| 20250911_010322 | moonshotai/Kimi-K2-Instruct-0905 | 0.57 | 25.032 | 40.473 | tokens=50 full suite, attempts=2, jobs=12, temp=0.2 |
+| 20250911_014435 | zai-org/GLM-4.5-FP8 | 0.88 | 24.101 | 26.570 | tokens=70 full suite, attempts=2, jobs=12, temp=0.2 |
+| 20250911_014635 | Qwen/Qwen3-Coder-480B-A35B-Instruct-FP8 | 0.88 | 19.520 | 42.094 | tokens=80 full suite, attempts=2, jobs=12, temp=0.2 |
+| 20250911_021115 | moonshotai/Kimi-K2-Instruct-0905 | 0.50 | 28.538 | 30.118 | full suite, jobs=12, temp=0.2 |
+| 20250911_021205 | moonshotai/Kimi-K2-Instruct-75k | 0.50 | 22.355 | 41.288 | full suite, jobs=12, temp=0.2 |
+| 20250911_021312 | deepseek-ai/DeepSeek-V3.1 | 0.50 | 20.162 | 30.252 | full suite, jobs=12, temp=0.2 |
+| 20250911_022220 | moonshotai/Kimi-K2-Instruct-0905 | 0.50 | 23.706 | 48.550 | full suite, jobs=12, temp=0.2 |
+| 20250911_022310 | moonshotai/Kimi-K2-Instruct-75k | 0.50 | 21.804 | 49.841 | full suite, jobs=12, temp=0.2 |
+| 20250911_022408 | moonshotai/Kimi-Dev-72B | 0.00 | 3.630 | 4.404 | full suite, jobs=12, temp=0.2 |
+| 20250911_022414 | deepseek-ai/DeepSeek-V3.1 | 0.50 | 15.400 | 42.783 | full suite, jobs=12, temp=0.2 |
+| 20250911_022514 | deepseek-ai/DeepSeek-V3-0324 | 0.00 | 21.788 | 24.457 | full suite, jobs=12, temp=0.2 |
+| 20250911_022539 | Qwen/Qwen3-Coder-480B-A35B-Instruct-FP8 | 0.88 | 19.858 | 47.483 | full suite, jobs=12, temp=0.2 |
+| 20250911_022627 | Qwen/Qwen3-Coder-30B-A3B-Instruct | 0.62 | 25.121 | 33.331 | full suite, jobs=12, temp=0.2 |
+| 20250911_022709 | zai-org/GLM-4.5-FP8 | 0.75 | 20.485 | 29.614 | full suite, jobs=12, temp=0.2 |
+| 20250911_022757 | zai-org/GLM-4.5-Air | 0.75 | 25.428 | 38.675 | full suite, jobs=12, temp=0.2 |
+| 20250911_022838 | openai/gpt-5-mini | 0.50 | 16.761 | 42.235 | full suite, jobs=12, temp=0.2 |
+| 20250911_022938 | openai/gpt-oss-120b | 0.50 | 14.957 | 18.909 | full suite, jobs=12, temp=0.2 |
+| 20250911_023004 | openai/r1-0528 | 0.00 | 1.458 | 1.474 | full suite, jobs=12, temp=0.2 |
+| 20250911_023006 | unsloth/gemma-3-12b-it | 0.00 | 15.489 | 16.790 | full suite, jobs=12, temp=0.2 |
+| 20250913_161701 | deepseek-ai/DeepSeek-R1-0528 | 0.00 | 23.483 | 24.675 | full suite, jobs=12, temp=0.2 |
+| 20250913_161729 | Qwen/Qwen3-Next-80B-A3B-Instruct | 0.12 | 26.417 | 27.044 | full suite, jobs=12, temp=0.2 |
+| 20250913_161757 | Qwen/Qwen3-235B-A22B-Thinking-2507 | 0.00 | 2.937 | 2.999 | full suite, jobs=12, temp=0.2 |
 <!-- LOG_TABLE_END -->
 
 Notes:
@@ -150,23 +150,23 @@ Notes:
 - Keep older sections for historical reference. Avoid editing past results; add new rows with new timestamps.
 
 
-| 20250905_025710 | moonshotai/Kimi-K2-Instruct-75k | 0.43 | 25.419 | 36.048 | 7-task suite, Kimi-K2, PYTHONPATH+auto-install enabled |
-| 20250905_030112 | Qwen/Qwen3-Coder-480B-A35B-Instruct-FP8 | 0.43 | 31.508 | 35.820 | 7-task suite, Qwen 480B FP8, PYTHONPATH+auto-install |
+| 20250905_025710 | moonshotai/Kimi-K2-Instruct-75k | 0.43 | 25.419 | 36.048 | suite, Kimi-K2, PYTHONPATH+auto-install enabled |
+| 20250905_030112 | Qwen/Qwen3-Coder-480B-A35B-Instruct-FP8 | 0.43 | 31.508 | 35.820 | suite, Qwen 480B FP8, PYTHONPATH+auto-install |
 | 20250905_031235 | Qwen/Qwen3-Coder-480B-A35B-Instruct-FP8 | 1.00 | 26.839 | 26.839 | post-refactor smoke (3 tasks), Qwen 480B FP8 |
-| 20250905_031529 | Qwen/Qwen3-Coder-480B-A35B-Instruct-FP8 | 0.57 | 29.990 | 38.298 | 7-task suite, Qwen 480B FP8, post-refactor |
-| 20250906_010859 | moonshotai/Kimi-K2-Instruct-0905 | 0.57 | 25.596 | 31.745 | 7-task suite, Kimi-K2-0905 |
+| 20250905_031529 | Qwen/Qwen3-Coder-480B-A35B-Instruct-FP8 | 0.57 | 29.990 | 38.298 | suite, Qwen 480B FP8, post-refactor |
+| 20250906_010859 | moonshotai/Kimi-K2-Instruct-0905 | 0.57 | 25.596 | 31.745 | suite, Kimi-K2-0905 |
 | 20250906_170720 | moonshotai/Kimi-K2-Instruct-75k | 0.57 | 17.698 | 25.080 | validation sweep |
 | 20250906_201923 | moonshotai/Kimi-K2-Instruct-0905 | 1.00 | 16.747 | 13.225 | 2-task smoke, Kimi-K2-0905 |
 | 20250906_204513 | moonshotai/Kimi-K2-Instruct-0905 | 1.00 | 18.379 | 15.473 | post-move shim test |
 | 20250907_194335 | moonshotai/Kimi-K2-Instruct-75k | 1.00 | 18.624 | 13.701 | validation sweep |
 | 20250907_195415 | moonshotai/Kimi-K2-Instruct-75k | 1.00 | 21.113 | 21.113 |  |
-| 20250907_200654 | moonshotai/Kimi-K2-Instruct-0905 | 0.57 | 32.338 | 47.708 | full 7-task sweep, temp=0 |
-| 20250907_201036 | moonshotai/Kimi-K2-Instruct-75k | 0.57 | 32.363 | 42.521 | full 7-task sweep, temp=0 |
-| 20250907_201416 | moonshotai/Kimi-Dev-72B | 0.00 | 3.280 | 3.393 | full 7-task sweep, temp=0 |
-| 20250907_201438 | deepseek-ai/DeepSeek-V3.1 | 0.57 | 34.737 | 47.735 | full 7-task sweep, temp=0 |
-| 20250907_201853 | deepseek-ai/DeepSeek-V3-0324 | 0.00 | 21.610 | 25.435 | full 7-task sweep, temp=0 |
-| 20250907_202121 | openai/gpt-oss-120b | 0.00 | 13.327 | 13.687 | full 7-task sweep, temp=0 |
-| 20250907_202252 | openai/gpt-oss-20b | 0.00 | 9.900 | 14.364 | full 7-task sweep, temp=0 |
-| 20250907_202410 | Qwen/Qwen3-Coder-480B-A35B-Instruct-FP8 | 0.86 | 46.330 | 60.000 | full 7-task sweep, temp=0 |
-| 20250907_202938 | Qwen/Qwen3-Coder-30B-A3B-Instruct | 0.71 | 23.524 | 33.578 | full 7-task sweep, temp=0 |
-| 20250907_203247 | zai-org/GLM-4.5-FP8 | 0.86 | 24.169 | 27.281 | full 7-task sweep, temp=0 |
+| 20250907_200654 | moonshotai/Kimi-K2-Instruct-0905 | 0.57 | 32.338 | 47.708 | full suite, temp=0 |
+| 20250907_201036 | moonshotai/Kimi-K2-Instruct-75k | 0.57 | 32.363 | 42.521 | full suite, temp=0 |
+| 20250907_201416 | moonshotai/Kimi-Dev-72B | 0.00 | 3.280 | 3.393 | full suite, temp=0 |
+| 20250907_201438 | deepseek-ai/DeepSeek-V3.1 | 0.57 | 34.737 | 47.735 | full suite, temp=0 |
+| 20250907_201853 | deepseek-ai/DeepSeek-V3-0324 | 0.00 | 21.610 | 25.435 | full suite, temp=0 |
+| 20250907_202121 | openai/gpt-oss-120b | 0.00 | 13.327 | 13.687 | full suite, temp=0 |
+| 20250907_202252 | openai/gpt-oss-20b | 0.00 | 9.900 | 14.364 | full suite, temp=0 |
+| 20250907_202410 | Qwen/Qwen3-Coder-480B-A35B-Instruct-FP8 | 0.86 | 46.330 | 60.000 | full suite, temp=0 |
+| 20250907_202938 | Qwen/Qwen3-Coder-30B-A3B-Instruct | 0.71 | 23.524 | 33.578 | full suite, temp=0 |
+| 20250907_203247 | zai-org/GLM-4.5-FP8 | 0.86 | 24.169 | 27.281 | full suite, temp=0 |

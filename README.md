@@ -103,7 +103,7 @@ python -m demas.benchmarks.sweep \
   --limit 0 \
   --jobs 12 \
   --temperature 0 \
-  --notes "full 7-task sweep, temp=0"
+  --notes "full suite, temp=0"
 ```
  - Keep best per model on leaderboard after a full sweep:
 ```bash
@@ -118,7 +118,7 @@ CHUTES_API_KEY=YOUR_KEY python swebench_batch.py \
   --seeds sandbox/swe_tasks.jsonl \
   --agent \
   --jobs 12 \
-  --bench-notes "full 7-task suite, jobs=12, temp=0.2"
+  --bench-notes "full suite, jobs=12, temp=0.2"
 ```
 
 ### Next steps
