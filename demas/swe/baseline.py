@@ -114,10 +114,11 @@ def main(argv: list[str]) -> int:
     # Build a single-session script with per-step timeouts using coreutils `timeout`
     # If `timeout` is unavailable, outer timeout in run_in_container still caps the whole run.
     # Optional pre-run before applying patch, then apply patch, then run tests again.
+    # Always do a quick pre-test run to avoid blocking on install under strict caps
     pre_run_cmd = (
         f"btail=$(timeout {TIMEOUT_TEST}s python -m pytest -q {kflag} | tail -n 1)\n"
         "echo BEFORE_TAIL: ${btail}\n"
-    ) if args.pre_patch_run else ""
+    )
 
     post_run_cmd = (
         f"atail=$(timeout {TIMEOUT_TEST}s python -m pytest -q {kflag} | tail -n 1)\n"
@@ -136,7 +137,12 @@ if [ -n {shlex.quote(ref or '')} ]; then \
 fi
 echo STAGE:CLONE:END $(date +%s.%N)
 
+# Quick pre-test run before install to capture an immediate pass when possible
+{pre_run_cmd}
+
 echo STAGE:INSTALL:START $(date +%s.%N)
+# Allow best-effort installs under strict caps without aborting the whole script
+set +e
 python -m pip install -q -U pip || true
 # Common build backends used by modern projects
 timeout 10s python -m pip install -q hatchling hatch-vcs meson-python ninja cython setuptools_scm || true
@@ -163,10 +169,9 @@ if [ -d src/dateutil/zoneinfo ]; then \
     fi; \
   fi; \
 fi
+set -e
 echo STAGE:INSTALL:END $(date +%s.%N)
 
-# Optional pre-patch run
-{pre_run_cmd}
 # Apply patch if provided
 {patch_embed}
 # Run tests after (or only run if no pre-patch)

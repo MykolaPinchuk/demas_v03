@@ -130,7 +130,13 @@ def run_agent(task: Dict[str, Any], *, model: str, temperature: float, max_turns
             p = subprocess.run([sys.executable, "-m", "demas.swe.oneagent"], env=env, check=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, timeout=max(1, int(attempt_cap_s)))
             out = p.stdout or ""
         except subprocess.TimeoutExpired as e:
-            out = (e.stdout or "") + "\n(timeout)"
+            _s = e.stdout
+            if isinstance(_s, bytes):
+                try:
+                    _s = _s.decode("utf-8", errors="ignore")
+                except Exception:
+                    _s = ""
+            out = (_s or "") + "\n(timeout)"
         # Determine pass from stdout tail heuristics
         tail = ""
         for ln in (out or "").splitlines()[::-1]:

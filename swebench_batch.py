@@ -174,7 +174,14 @@ def run_agent_for_task(task: Dict[str, Any], *, out_dir: str, model: str, temper
             )
             out = p.stdout or ""
         except subprocess.TimeoutExpired as e:
-            out = (e.stdout or "") + "\n(timeout)"
+            # e.stdout may be bytes depending on the platform/config; coerce safely
+            _s = e.stdout
+            if isinstance(_s, bytes):
+                try:
+                    _s = _s.decode("utf-8", errors="ignore")
+                except Exception:
+                    _s = ""
+            out = ( _s or "" ) + "\n(timeout)"
         dt_k = time.time() - t0
         # Determine tail: prefer reading from the JSONL logs (reliable), fallback to stdout scan
         log_path = os.path.join(attempt_dir, "logs", f"{task.get('task_id','')}.jsonl")

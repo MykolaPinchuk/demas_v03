@@ -117,20 +117,19 @@ def main(argv: List[str]) -> int:
             p95 = info2.get("p95", "")
             info_model = info2.get("model", info_model)
             ts = ts2 or ts
-        # Append depending on notes/baseline
-        try:
-            agent_pass_rate = float(pr1 or 0.0)
-        except Exception:
-            agent_pass_rate = 0.0
-        if "full" in (args.notes or '').lower():
-            append_row("BENCHMARKS.md", ts, info_model, pr1, p50, p95, args.notes, (info2.get("tokens_total", "") if args.attempts_mode in ("2","both") else ""), pr2)
-            print(f"Appended BENCHMARKS row for {m} @ {ts} (full-suite run; attempts-mode={args.attempts_mode})")
-        else:
-            if agent_pass_rate > baseline_pass_rate:
-                append_row("BENCHMARKS.md", ts, info_model, pr1, p50, p95, args.notes, (info2.get("tokens_total", "") if args.attempts_mode in ("2","both") else ""), pr2)
-                print(f"Appended BENCHMARKS row for {m} @ {ts} (agent {agent_pass_rate:.2f} > baseline {baseline_pass_rate:.2f}; attempts-mode={args.attempts_mode})")
-            else:
-                print(f"Skipped append for {m}: agent {agent_pass_rate:.2f} <= baseline {baseline_pass_rate:.2f}")
+        # Always append a row, regardless of baseline comparison or notes
+        append_row(
+            "BENCHMARKS.md",
+            ts,
+            info_model,
+            pr1,
+            p50,
+            p95,
+            args.notes,
+            (info2.get("tokens_total", "") if args.attempts_mode in ("2","both") else ""),
+            pr2,
+        )
+        print(f"Appended BENCHMARKS row for {m} @ {ts} (attempts-mode={args.attempts_mode})")
     # Normalize leaderboard to best per model if notes indicate full suite
     try:
         if "full" in (args.notes or '').lower():

@@ -158,6 +158,19 @@ Then open the newest `sandbox/agent_batch_runs/<ts>/summary.csv` and record:
 | 20250913_170451 | zai-org/GLM-4.5-FP8 | 0.00 |  | NA | NA | full suite, attempts=1 refresh, jobs=12, temp=0.2 |
 | 20250913_170455 | zai-org/GLM-4.5-Air | 0.00 |  | NA | NA | full suite, attempts=1 refresh, jobs=12, temp=0.2 |
 | 20250913_170458 | unsloth/gemma-3-12b-it | 0.00 |  | NA | NA | full suite, attempts=1 refresh, jobs=12, temp=0.2 |
+| 20250913_195729 | Qwen/Qwen3-Coder-480B-A35B-Instruct-FP8 | 0.50 |  | NA | NA | validation attempts=1 only, jobs=12, temp=0.2 |
+| 20250913_195813 | zai-org/GLM-4.5-FP8 | 0.50 |  | NA | NA | validation attempts=1 only, jobs=12, temp=0.2 |
+| 20250913_201812 | Qwen/Qwen3-Coder-480B-A35B-Instruct-FP8 | 0.50 |  | NA | NA | consistent baseline=0.25; attempts=1 only, jobs=12, temp=0.2 |
+| 20250913_201904 | zai-org/GLM-4.5-FP8 | 0.50 |  | NA | NA | consistent baseline=0.25; attempts=1 only, jobs=12, temp=0.2 |
+| 20250913_201942 | deepseek-ai/DeepSeek-V3.1 | 0.50 |  | NA | NA | consistent baseline=0.25; attempts=1 only, jobs=12, temp=0.2 |
+| 20250913_202016 | moonshotai/Kimi-K2-Instruct-0905 | 0.38 |  | NA | NA | consistent baseline=0.25; attempts=1 only, jobs=12, temp=0.2 |
+| 20250913_202302 | moonshotai/Kimi-K2-Instruct-0905 | 0.50 |  | NA | NA | consistent baseline=0.25; attempts=1 only, jobs=12, temp=0.2 (mix providers) |
+| 20250913_202350 | deepseek-ai/DeepSeek-V3.1 | 0.50 |  | NA | NA | consistent baseline=0.25; attempts=1 only, jobs=12, temp=0.2 (mix providers) |
+| 20250913_202450 | openai/gpt-oss-120b | 0.50 |  | NA | NA | consistent baseline=0.25; attempts=1 only, jobs=12, temp=0.2 (mix providers) |
+| 20250913_202534 | openai/gpt-5-mini | 0.50 |  | NA | NA | consistent baseline=0.25; attempts=1 only, jobs=12, temp=0.2 (mix providers) |
+| 20250913_203242 | Qwen/Qwen3-235B-A22B-Thinking-2507 | 0.12 |  | NA | NA | consistent baseline=0.25; attempts=1 only, jobs=12, temp=0.2 (append all) |
+| 20250913_203342 | Qwen/Qwen3-Next-80B-A3B-Instruct | 0.12 |  | NA | NA | consistent baseline=0.25; attempts=1 only, jobs=12, temp=0.2 (append all) |
+| 20250913_203406 | deepseek-ai/DeepSeek-R1-0528 | 0.00 |  | NA | NA | consistent baseline=0.25; attempts=1 only, jobs=12, temp=0.2 (append all) |
 <!-- LOG_TABLE_END -->
 
 Notes:
