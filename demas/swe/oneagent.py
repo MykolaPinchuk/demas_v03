@@ -587,16 +587,17 @@ async def main():
 You are a code-fixing agent working inside a clean Docker container.
 Use ONLY the provided tools. Keep outputs minimal.
 
-Steps:
+Steps (optimize for speed under strict timeouts):
 1) swe_clone(repo_url="{TARGET_REPO}", ref="{TARGET_REF}")
-2) swe_install()    # installs project and test deps if present
-3) Run tests using swe_pytest_auto(pytest_args="-q {kline}".strip()). It will auto-install a missing module if pytest shows ModuleNotFoundError, then re-run tests once. Paste ONLY the returned tail.
-4) If tests still fail, get diagnostics using swe_pytest_full(pytest_args="-q -x -vv"). If helpful, open specific files via swe_read_file(path="...").
-5) If diagnostics indicate a missing package that was not auto-installed, install it using swe_pip_install(packages="<name>") and re-run tests once via swe_pytest.
-6) Attempt EXACTLY ONE minimal unified diff patch (keep it small). Apply via swe_apply_patch_text(diff_text=...). Then re-run tests with swe_pytest and paste ONLY the returned tail. After this second test run, STOP.
+2) QUICK PRE-TEST: run swe_pytest(pytest_args="-q {kline}".strip()). If tests PASS, STOP immediately (do not install or patch). Paste ONLY the returned tail.
+3) If pre-test fails, run swe_pytest_auto(pytest_args="-q {kline}".strip()) to auto-install a missing top-level module once and re-run tests. If PASS, STOP and paste ONLY the tail.
+4) Only if still failing: swe_install() to install the project and test deps.
+5) If still failing, get diagnostics with swe_pytest_full(pytest_args="-q -x -vv"). Use swe_read_file(path="...") if you need to inspect code.
+6) If diagnostics indicate a missing package not auto-installed, use swe_pip_install(packages="<name>") and then re-run swe_pytest.
+7) Attempt EXACTLY ONE minimal unified diff patch (keep it small). Apply via swe_apply_patch_text(diff_text=...). Then re-run tests with swe_pytest and paste ONLY the returned tail. After this second test run, STOP.
 
 CRITICAL OUTPUT RULE:
-When you run tests (step 3 or after patch), paste ONLY the exact string returned by swe_pytest (the last non-empty pytest stdout line). No extra words.
+Whenever you run tests, paste ONLY the exact string returned by swe_pytest/swe_pytest_auto (the last non-empty pytest stdout line). No extra words.
 {hint_block}"""
 
     t0 = time.time()

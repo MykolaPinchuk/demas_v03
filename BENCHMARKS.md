@@ -171,6 +171,13 @@ Then open the newest `sandbox/agent_batch_runs/<ts>/summary.csv` and record:
 | 20250913_203242 | Qwen/Qwen3-235B-A22B-Thinking-2507 | 0.12 |  | NA | NA | consistent baseline=0.25; attempts=1 only, jobs=12, temp=0.2 (append all) |
 | 20250913_203342 | Qwen/Qwen3-Next-80B-A3B-Instruct | 0.12 |  | NA | NA | consistent baseline=0.25; attempts=1 only, jobs=12, temp=0.2 (append all) |
 | 20250913_203406 | deepseek-ai/DeepSeek-R1-0528 | 0.00 |  | NA | NA | consistent baseline=0.25; attempts=1 only, jobs=12, temp=0.2 (append all) |
+| 20250913_204608 | Qwen/Qwen3-Coder-480B-A35B-Instruct-FP8 | 0.50 |  | NA | NA | agent pretest enabled; attempts=1 only, jobs=12, temp=0.2 |
+| 20250913_204701 | zai-org/GLM-4.5-FP8 | 0.50 |  | NA | NA | agent pretest enabled; attempts=1 only, jobs=12, temp=0.2 |
+| 20250913_205154 | Qwen/Qwen3-Coder-480B-A35B-Instruct-FP8 | 0.75 |  | NA | NA | updated suite (-k); attempts=1 only, jobs=12, temp=0.2 |
+| 20250913_205749 | zai-org/GLM-4.5-FP8 | 0.75 |  | NA | NA | updated suite (-k); attempts=1 only, jobs=12, temp=0.2 (mix providers) |
+| 20250913_205819 | deepseek-ai/DeepSeek-V3.1 | 0.75 |  | NA | NA | updated suite (-k); attempts=1 only, jobs=12, temp=0.2 (mix providers) |
+| 20250913_205846 | openai/gpt-oss-120b | 0.75 |  | NA | NA | updated suite (-k); attempts=1 only, jobs=12, temp=0.2 (mix providers) |
+| 20250913_205907 | openai/gpt-5-mini | 0.75 |  | NA | NA | updated suite (-k); attempts=1 only, jobs=12, temp=0.2 (mix providers) |
 <!-- LOG_TABLE_END -->
 
 Notes:
