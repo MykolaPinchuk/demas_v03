@@ -212,15 +212,21 @@ async def swe_clone(*, repo_url: str, ref: Optional[str] = None) -> str:
     # Determine a unique project directory name
     proj = PROJECT_DIR or f"project_{(TASK_ID or 'task').replace('/', '_')}_{RUN_ID[:8]}"
     proj_q = shlex.quote(proj)
-    cmds = [
-        f"rm -rf {proj_q}",
-        f"timeout {TIMEOUT_CLONE}s git clone --depth 1 {shlex.quote(repo_url)} {proj_q}",
-    ]
+    # Support local path sources under /workspace (mounted host sandbox) as well as git URLs
+    script = (
+        "set -e\n"
+        f"rm -rf {proj_q}\n"
+        f"repo_src={shlex.quote(repo_url)}\n"
+        "case \"${repo_src}\" in \n"
+        f"  /workspace/*) mkdir -p {proj_q} && cp -R \"${{repo_src}}/.\" {proj_q} ;;\n"
+        f"  *) timeout {TIMEOUT_CLONE}s git clone --depth 1 {shlex.quote(repo_url)} {proj_q} ;;\n"
+        "esac\n"
+    )
     if ref:
-        cmds.append(
-            f"cd {proj_q} && timeout {TIMEOUT_CLONE}s git fetch --depth 1 origin {shlex.quote(ref)} && git checkout -q {shlex.quote(ref)}"
+        script += (
+            f"cd {proj_q} && timeout {TIMEOUT_CLONE}s git fetch --depth 1 origin {shlex.quote(ref)} && git checkout -q {shlex.quote(ref)}\n"
         )
-    code, out, err = _docker(" && ".join(cmds))
+    code, out, err = _docker(script)
     res = "(cloned)" if code == 0 else f"(exit {code})\nSTDOUT:\n{out}\nSTDERR:\n{err}"
     _log_record({
         "timestamp": _now_iso(), "role": "tool", "content": "", "tool_name": "swe_clone",

@@ -191,6 +191,9 @@ Then open the newest `sandbox/agent_batch_runs/<ts>/summary.csv` and record:
 | 20250914_001715 | deepseek-ai/DeepSeek-V3.1 | 0.75 |  | NA | NA | curated tweaks: test cap=10s for numpy-financial; attempts=1, jobs=12, temp=0.2 |
 | 20250914_002652 | Qwen/Qwen3-Coder-480B-A35B-Instruct-FP8 | 0.67 |  | NA | NA | 6-task suite trimmed; attempts=1, jobs=12, temp=0.2 |
 | 20250914_002723 | zai-org/GLM-4.5-FP8 | 0.67 |  | NA | NA | 6-task suite trimmed; attempts=1, jobs=12, temp=0.2 |
+| 20250914_011706 | Qwen/Qwen3-Coder-480B-A35B-Instruct-FP8 | 0.50 |  | NA | NA | full suite, attempts=1, jobs=14, temp=0.2 |
+| 20250914_011735 | zai-org/GLM-4.5-FP8 | 0.50 |  | NA | NA | full suite, attempts=1, jobs=14, temp=0.2 |
+| 20250914_011817 | deepseek-ai/DeepSeek-V3.1 | 0.50 |  | NA | NA | full suite, attempts=1, jobs=14, temp=0.2 |
 <!-- LOG_TABLE_END -->
 
 Notes:
