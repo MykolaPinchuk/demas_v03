@@ -589,7 +589,32 @@ async def main():
     kline = f'-k "{PYTEST_K}"' if PYTEST_K else ""
     # Optional hint from previous attempt to guide this run
     hint_block = ("\n\nPrevious attempt summary (brief):\n" + ATTEMPT_HINT + "\n") if ATTEMPT_HINT else ""
-    task = f"""
+    is_local = (TARGET_REPO or "").startswith("/workspace/")
+    if is_local:
+        task = f"""
+You are a code-fixing agent working inside a clean Docker container.
+Use ONLY the provided tools. Keep outputs minimal.
+
+Steps (local repo detected; optimize for speed under strict timeouts):
+1) swe_clone(repo_url="{TARGET_REPO}", ref="{TARGET_REF}")
+2) QUICK PRE-TEST: run swe_pytest(pytest_args="-q {kline}".strip()). If tests PASS, STOP immediately.
+3) If pre-test fails, SKIP swe_install; run swe_pytest_full(pytest_args="-q -x -vv") to gather diagnostics.
+4) Attempt EXACTLY ONE minimal unified diff patch to fix the failing test. Apply via swe_apply_patch_text(diff_text=...). Keep the diff as small as possible.
+
+Unified diff format example (use correct file path and minimal context):
+--- a/src/pkg/module.py
++++ b/src/pkg/module.py
+@@
+-    return a - b
++    return a + b
+
+5) Re-run tests with swe_pytest(pytest_args="-q {kline}".strip()). Paste ONLY the returned tail and STOP.
+
+CRITICAL OUTPUT RULE:
+Whenever you run tests, paste ONLY the exact string returned by swe_pytest (the last non-empty pytest stdout line). No extra words.
+{hint_block}"""
+    else:
+        task = f"""
 You are a code-fixing agent working inside a clean Docker container.
 Use ONLY the provided tools. Keep outputs minimal.
 

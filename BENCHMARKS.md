@@ -36,7 +36,7 @@ Then open the newest `sandbox/agent_batch_runs/<ts>/summary.csv` and record:
 |---------------------|--------------------------------------------|-----------|----------------------|----------------|----------------|-------|
 | 20250913_164120 | Qwen/Qwen3-235B-A22B-Thinking-2507 | 0.00 | 0.00 | 6.022 | 6.134 | tokens=80 full suite, attempts=1 and 2, jobs=12, temp=0.2 |
 | 20250913_164101 | Qwen/Qwen3-Coder-30B-A3B-Instruct | 0.00 | 0.00 | 6.144 | 6.224 | tokens=80 full suite, attempts=1 and 2, jobs=12, temp=0.2 |
-| 20250913_164051 | Qwen/Qwen3-Coder-480B-A35B-Instruct-FP8 | 0.00 | 0.00 | 6.357 | 6.434 | tokens=80 full suite, attempts=1 and 2, jobs=12, temp=0.2 |
+| 20250914_013528 | Qwen/Qwen3-Coder-480B-A35B-Instruct-FP8 | 0.50 | 0.50 | 26.773 | 69.113 | tokens=80 full suite, attempts=1 and 2, jobs=14, temp=0.2 |
 | 20250913_164111 | Qwen/Qwen3-Next-80B-A3B-Instruct | 0.00 | 0.00 | 5.974 | 6.299 | tokens=80 full suite, attempts=1 and 2, jobs=12, temp=0.2 |
 | 20250913_164042 | deepseek-ai/DeepSeek-R1-0528 | 0.00 | 0.00 | 6.069 | 6.112 | tokens=80 full suite, attempts=1 and 2, jobs=12, temp=0.2 |
 | 20250913_164032 | deepseek-ai/DeepSeek-V3-0324 | 0.00 | 0.00 | 6.198 | 6.285 | tokens=80 full suite, attempts=1 and 2, jobs=12, temp=0.2 |
@@ -46,7 +46,7 @@ Then open the newest `sandbox/agent_batch_runs/<ts>/summary.csv` and record:
 | 20250913_163747 | moonshotai/Kimi-K2-Instruct-75k | 0.50 | 0.38 | 32.66 | 85.724 | tokens=80 full suite, attempts=1 and 2, jobs=12, temp=0.2 |
 | 20250913_164432 | unsloth/gemma-3-12b-it | 0.00 | 0.00 | 27.865 | 28.387 | tokens=80 full suite, attempts=1 and 2, jobs=12, temp=0.2 |
 | 20250913_164311 | zai-org/GLM-4.5-Air | 0.12 | 0.50 | 27.729 | 28.264 | tokens=40 full suite, attempts=1 and 2, jobs=12, temp=0.2 |
-| 20250913_164201 | zai-org/GLM-4.5-FP8 | 0.25 | 0.12 | 13.127 | 13.304 | tokens=80 full suite, attempts=1 and 2, jobs=12, temp=0.2 |
+| 20250914_013748 | zai-org/GLM-4.5-FP8 | 0.50 | 0.50 | 42.192 | 77.009 | tokens=80 full suite, attempts=1 and 2, jobs=14, temp=0.2 |
 <!-- MAIN_TABLE_END -->
 
 ### Run log (all runs)
@@ -194,6 +194,15 @@ Then open the newest `sandbox/agent_batch_runs/<ts>/summary.csv` and record:
 | 20250914_011706 | Qwen/Qwen3-Coder-480B-A35B-Instruct-FP8 | 0.50 |  | NA | NA | full suite, attempts=1, jobs=14, temp=0.2 |
 | 20250914_011735 | zai-org/GLM-4.5-FP8 | 0.50 |  | NA | NA | full suite, attempts=1, jobs=14, temp=0.2 |
 | 20250914_011817 | deepseek-ai/DeepSeek-V3.1 | 0.50 |  | NA | NA | full suite, attempts=1, jobs=14, temp=0.2 |
+| 20250914_013528 | Qwen/Qwen3-Coder-480B-A35B-Instruct-FP8 | 0.50 | 0.50 | 26.773 | 69.113 | tokens=80 full suite, attempts=1 and 2, jobs=14, temp=0.2 |
+| 20250914_013748 | zai-org/GLM-4.5-FP8 | 0.50 | 0.50 | 42.192 | 77.009 | tokens=80 full suite, attempts=1 and 2, jobs=14, temp=0.2 |
+| 20250914_014009 | deepseek-ai/DeepSeek-V3.1 | 0.50 | 0.50 | 26.632 | 58.089 | tokens=80 full suite, attempts=1 and 2, jobs=14, temp=0.2 |
+| 20250914_015233 | Qwen/Qwen3-Coder-480B-A35B-Instruct-FP8 | 0.50 |  | NA | NA | full suite, attempts=1, jobs=14, temp=0.2 (local early patch) |
+| 20250914_015319 | zai-org/GLM-4.5-FP8 | 0.50 |  | NA | NA | full suite, attempts=1, jobs=14, temp=0.2 (local early patch) |
+| 20250914_015405 | deepseek-ai/DeepSeek-V3.1 | 0.50 |  | NA | NA | full suite, attempts=1, jobs=14, temp=0.2 (local early patch) |
+| 20250914_020033 | Qwen/Qwen3-Coder-480B-A35B-Instruct-FP8 | 0.50 |  | NA | NA | full suite, attempts=1, jobs=14, temp=0.2 (local early patch + diff hint) |
+| 20250914_020129 | zai-org/GLM-4.5-FP8 | 0.50 |  | NA | NA | full suite, attempts=1, jobs=14, temp=0.2 (local early patch + diff hint) |
+| 20250914_020214 | deepseek-ai/DeepSeek-V3.1 | 0.50 |  | NA | NA | full suite, attempts=1, jobs=14, temp=0.2 (local early patch + diff hint) |
 <!-- LOG_TABLE_END -->
 
 Notes:
