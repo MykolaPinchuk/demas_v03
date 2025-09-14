@@ -101,3 +101,69 @@ python -m demas.benchmarks.profile --baseline-run-dir sandbox/batch_runs/<timest
 ```
 
 
+### Evaluation principles (read this before running sweeps)
+- Objective: distinguish good agents/models from weak ones clearly and reproducibly.
+- Two key levers to keep evaluations meaningful:
+  1) Keep baseline pass_rate low. Avoid including trivially passing tasks in the scoring suite. Use strict caps, light `-k` selectors, and curated failing commits that require a minimal patch.
+  2) Maximize spread between best and worst models. Prefer tasks that strong models can solve reliably within caps, while weak models struggle.
+- Harness guidelines:
+  - Run a quick pre-test before install; early-exit on pass. Do not waste budget on installs when not needed.
+  - Use small `-k` filters so tests fit in 5–8s. If a repo can’t fit, exclude it from the scoring suite.
+  - Pin failing commits when possible (via `demas.adapters.swebench`) so success depends on a surgical code change, not infra luck.
+  - Append all runs to `BENCHMARKS.md` but interpret leaderboards with baseline context.
+  - Keep internet usage minimal: only git/pip; avoid heavy downloads that won’t finish within caps.
+
+
+### Where to pick up (current eval state and next steps)
+
+Current state (as of latest runs):
+- Scoring suite trimmed to 6 tasks in `sandbox/swe_tasks.jsonl` (easy-pass repos removed). Two curated local tasks were added but are not yet scoring-ready.
+- Strict caps remain (clone=5s, install=30s). Test caps per task tuned to 5–10s using `pytest_k` when needed.
+- Baseline pass_rate ≈ 0.17 on the 6-task suite; top Chutes models ≈ 0.67 (attempts=1). Spread is acceptable; baseline is low.
+- Runners/harness:
+  - Baseline runs a pre-test before install and is resilient to install failures.
+  - Agent runs a pre-test before install and early-exits on pass; sweep appends all runs to `BENCHMARKS.md`.
+
+Suite details (scoring):
+- Present tasks include: numpy-financial (pinned), click (`-k help`), packaging (`-k version`), sortedcontainers (small `-k`), attrs (`-k version`), jmespath (`-k lexer`).
+- Two local curated fast-fail tasks exist under `sandbox/local_repos/{demo_add,demo_upper}` and are listed in `swe_tasks.jsonl`, but they currently fail at install. These should be treated as future scoring candidates.
+
+What’s left to do (priority):
+1) Make local curated tasks scoring-ready:
+   - For repos under `/workspace/local_repos/...`, skip install and run tests directly from source by exporting `PYTHONPATH=$PWD:$PWD/src:$PYTHONPATH` for pre-test and test phases.
+   - Update baseline (and optionally agent) to detect local paths and bypass editable installs for these tasks.
+   - Verify baseline runs show pre-test tails for `demo_add` and `demo_upper` and that agents can patch them within caps.
+2) Restore an 8-task scoring suite:
+   - Either enable the two curated local tasks (preferred) or swap in two curated failing commits via `demas.adapters.swebench` that run <8s and require a minimal one-diff fix.
+3) Re-run attempts=1 for top models to validate spread:
+   - Chutes: `Qwen/Qwen3-Coder-480B-A35B-Instruct-FP8`, `zai-org/GLM-4.5-FP8`, `deepseek-ai/DeepSeek-V3.1`.
+   - OpenRouter (optional): `openai/gpt-oss-120b`, `openai/gpt-5-mini`.
+   - Ensure `BENCHMARKS.md` captures runs; add notes describing suite version and caps.
+4) (Optional) attempts=2:
+   - If needed for additional separation, run attempts=2 and normalize the leaderboard to the best per model (prefer dual-attempt rows when meaningful).
+
+Quick commands (reference):
+```bash
+# Build image (if needed)
+docker build -f Dockerfile.swe -t swebench-lite:py3.10 .
+
+# Baseline full suite (sequential for clarity)
+source .venv/bin/activate
+python swebench_batch.py --seeds sandbox/swe_tasks.jsonl --limit 0 --jobs 1
+
+# Two-model sweep (attempts=1) with notes
+python -m demas.benchmarks.sweep \
+  --seeds sandbox/swe_tasks.jsonl \
+  --limit 0 \
+  --jobs 12 \
+  --temperature 0.2 \
+  --attempts-mode 1 \
+  --notes "scoring suite vX; attempts=1; strict caps"
+  --models Qwen/Qwen3-Coder-480B-A35B-Instruct-FP8 zai-org/GLM-4.5-FP8
+```
+
+Guardrails to preserve signal:
+- Keep baseline low: avoid adding trivially passing tasks to the scoring set.
+- Keep caps strict and use `-k` to fit tests into 5–8s; document any per-task exceptions.
+- When changing the suite, note the suite version and rationale in the sweep `--notes` and in `BENCHMARKS.md` so results remain comparable.
+

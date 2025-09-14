@@ -24,3 +24,11 @@
   - `python3 -m venv .venv && source .venv/bin/activate`
   - `python -m pip install -U pip && python -m pip install -r requirements.txt`
 - This avoids dependency conflicts and keeps the global Python clean.
+
+### Eval guardrails (important)
+- Goal of this harness: meaningful evaluation that separates good agents from weak ones.
+- Keep baseline low and model spread high:
+  - Prefer curated failing commits or small `-k` slices that fit within 5–8s test caps.
+  - Run a quick pre-test before install; early-exit on pass to avoid regressions.
+  - Do not modify suite to inflate baseline; avoid tasks that trivially pass.
+  - When adjusting suites, document rationale in `BENCHMARKS.md` notes.

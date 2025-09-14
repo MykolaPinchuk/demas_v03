@@ -178,6 +178,19 @@ Then open the newest `sandbox/agent_batch_runs/<ts>/summary.csv` and record:
 | 20250913_205819 | deepseek-ai/DeepSeek-V3.1 | 0.75 |  | NA | NA | updated suite (-k); attempts=1 only, jobs=12, temp=0.2 (mix providers) |
 | 20250913_205846 | openai/gpt-oss-120b | 0.75 |  | NA | NA | updated suite (-k); attempts=1 only, jobs=12, temp=0.2 (mix providers) |
 | 20250913_205907 | openai/gpt-5-mini | 0.75 |  | NA | NA | updated suite (-k); attempts=1 only, jobs=12, temp=0.2 (mix providers) |
+| 20250913_235411 | Qwen/Qwen3-Coder-480B-A35B-Instruct-FP8 | 0.75 |  | NA | NA | updated suite (-k), agent pretest+PYTHONPATH; attempts=1 only, jobs=12, temp=0.2 |
+| 20250913_235451 | openai/gpt-oss-120b | 0.75 |  | NA | NA | updated suite (-k), agent pretest+PYTHONPATH; attempts=1 only, jobs=12, temp=0.2 |
+| 20250913_235613 | Qwen/Qwen3-Coder-480B-A35B-Instruct-FP8 | NA | 0.75 | 15.480 | 39.964 | tokens=80 updated suite (-k), agent pretest+PYTHONPATH; attempts=2, jobs=12, temp=0.2 |
+| 20250913_235715 | openai/gpt-oss-120b | NA | 0.75 | 7.541 | 37.423 | tokens=80 updated suite (-k), agent pretest+PYTHONPATH; attempts=2, jobs=12, temp=0.2 |
+| 20250914_000143 | Qwen/Qwen3-Coder-480B-A35B-Instruct-FP8 | 0.75 |  | NA | NA | updated suite (-k), test cap=8s for click/packaging; attempts=1, jobs=12, temp=0.2 |
+| 20250914_000221 | zai-org/GLM-4.5-FP8 | 0.75 |  | NA | NA | updated suite (-k), test cap=8s for click/packaging; attempts=1, jobs=12, temp=0.2 |
+| 20250914_000418 | Qwen/Qwen3-Coder-480B-A35B-Instruct-FP8 | 0.75 |  | NA | NA | updated suite (-k), test cap=8s for 4 tasks; attempts=1, jobs=12, temp=0.2 |
+| 20250914_000449 | zai-org/GLM-4.5-FP8 | 0.75 |  | NA | NA | updated suite (-k), test cap=8s for 4 tasks; attempts=1, jobs=12, temp=0.2 |
+| 20250914_001541 | Qwen/Qwen3-Coder-480B-A35B-Instruct-FP8 | 0.75 |  | NA | NA | curated tweaks: test cap=10s for numpy-financial; attempts=1, jobs=12, temp=0.2 |
+| 20250914_001636 | zai-org/GLM-4.5-FP8 | 0.75 |  | NA | NA | curated tweaks: test cap=10s for numpy-financial; attempts=1, jobs=12, temp=0.2 |
+| 20250914_001715 | deepseek-ai/DeepSeek-V3.1 | 0.75 |  | NA | NA | curated tweaks: test cap=10s for numpy-financial; attempts=1, jobs=12, temp=0.2 |
+| 20250914_002652 | Qwen/Qwen3-Coder-480B-A35B-Instruct-FP8 | 0.67 |  | NA | NA | 6-task suite trimmed; attempts=1, jobs=12, temp=0.2 |
+| 20250914_002723 | zai-org/GLM-4.5-FP8 | 0.67 |  | NA | NA | 6-task suite trimmed; attempts=1, jobs=12, temp=0.2 |
 <!-- LOG_TABLE_END -->
 
 Notes:

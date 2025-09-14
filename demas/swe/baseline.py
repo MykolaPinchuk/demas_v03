@@ -116,12 +116,12 @@ def main(argv: list[str]) -> int:
     # Optional pre-run before applying patch, then apply patch, then run tests again.
     # Always do a quick pre-test run to avoid blocking on install under strict caps
     pre_run_cmd = (
-        f"btail=$(timeout {TIMEOUT_TEST}s python -m pytest -q {kflag} | tail -n 1)\n"
+        f"btail=$(export PYTHONPATH=\$PWD:\$PWD/src:\$PYTHONPATH; timeout {TIMEOUT_TEST}s python -m pytest -q {kflag} | tail -n 1)\n"
         "echo BEFORE_TAIL: ${btail}\n"
     )
 
     post_run_cmd = (
-        f"atail=$(timeout {TIMEOUT_TEST}s python -m pytest -q {kflag} | tail -n 1)\n"
+        f"atail=$(export PYTHONPATH=\$PWD:\$PWD/src:\$PYTHONPATH; timeout {TIMEOUT_TEST}s python -m pytest -q {kflag} | tail -n 1)\n"
         "echo AFTER_TAIL: ${atail}\n"
     )
 
@@ -129,7 +129,14 @@ def main(argv: list[str]) -> int:
 set -e
 rm -rf {proj_q}
 echo STAGE:CLONE:START $(date +%s.%N)
-timeout {TIMEOUT_CLONE}s git clone --depth 1 {shlex.quote(repo)} {proj_q}
+repo_src={shlex.quote(repo)}
+# Prefer direct copy for local paths under /workspace (mounted host sandbox). Fallback to git clone otherwise.
+case "${{repo_src}}" in 
+  /workspace/*)
+    rm -rf {proj_q} && mkdir -p {proj_q} && cp -R "${{repo_src}}/." {proj_q} ;;
+  *)
+    timeout {TIMEOUT_CLONE}s git clone --depth 1 "${{repo_src}}" {proj_q} ;;
+esac
 cd {proj_q}
 if [ -n {shlex.quote(ref or '')} ]; then \
   timeout {TIMEOUT_CLONE}s git fetch --depth 1 origin {shlex.quote(ref)} && \
